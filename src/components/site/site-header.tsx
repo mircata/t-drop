@@ -5,14 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
-export const NAV_ITEMS = [
-  { href: "/about", label: "About" },
-  { href: "/your-profile", label: "Your Profile" },
-  { href: "/register", label: "Register" },
-];
-
-const ANNOUNCEMENT =
-  "Очаквайте новият дроп 16 ФЕВ :: Темите този месец са Аниме, Кино, Фентъзи, Рок :: Регистрирай се сега! ::";
+export type NavItem = { href: string; label: string };
 
 function BagIcon({ className = "" }: { className?: string }) {
   return (
@@ -30,14 +23,14 @@ function MenuIcon() {
   );
 }
 
-export function SiteHeader() {
+export function SiteHeader({ announcement, nav }: { announcement: string; nav: NavItem[] }) {
   const pathname = usePathname();
   return (
     <header className="relative z-[500] min-h-[156px] pt-2.5 max-md:h-[118px] max-md:min-h-0 max-md:pt-0">
       {/* Announcement marquee, fixed to the top of the viewport like the Elementor header */}
       <div className="fixed inset-x-0 top-0 z-[500] bg-t-black">
         <div className="marquee py-[10px] font-body text-[24px] uppercase leading-[1.12] tracking-[0.04em] text-t-neon">
-          <span className="marquee-track">{ANNOUNCEMENT}</span>
+          <span className="marquee-track">{announcement}</span>
         </div>
       </div>
 
@@ -61,7 +54,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden flex-1 items-center justify-end lg:flex">
-          {NAV_ITEMS.map((item) => {
+          {nav.map((item) => {
             const active = pathname === item.href || (item.href === "/your-profile" && pathname === "/my-account");
             return (
               <Link
@@ -86,7 +79,7 @@ export function SiteHeader() {
             <SheetContent side="right" className="bg-t-cream">
               <SheetTitle className="sr-only">Меню</SheetTitle>
               <nav className="mt-10 flex flex-col gap-6">
-                {NAV_ITEMS.map((item) => (
+                {nav.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}

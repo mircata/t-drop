@@ -129,3 +129,9 @@ next-env.d.ts
 
 # WordPress backup archive (143 MB, over the GitHub file limit); keep it local
 wordpress-site/*.zip
+
+# keep the env template tracked
+!.env.example
+
+# Payload uploads (local dev); production uses a bucket
+/public/media/

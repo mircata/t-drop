@@ -27,8 +27,8 @@ export const pageTitle = "mb-4 font-body text-[40px] font-medium leading-[1.2] t
 export const buttonWhite =
   "inline-block rounded-[50px] bg-white px-10 py-[25px] font-headline text-[21px] uppercase leading-none tracking-[0.84px] text-t-black hover:bg-t-neon";
 
-export function Shirt({ className = "", w = 600, h = 800, aspect = "aspect-[3/4]" }: { className?: string; w?: number; h?: number; aspect?: string }) {
-  return <Image src={SHIRT} alt="" width={w} height={h} className={`${aspect} w-full rounded-[28px] object-cover ${className}`} />;
+export function Shirt({ src = SHIRT, className = "", w = 600, h = 800, aspect = "aspect-[3/4]" }: { src?: string; className?: string; w?: number; h?: number; aspect?: string }) {
+  return <Image src={src} alt="" width={w} height={h} className={`${aspect} w-full rounded-[28px] object-cover ${className}`} />;
 }
 
 export function InstagramIcon({ className = "size-[92px]" }: { className?: string }) {
@@ -47,14 +47,14 @@ export function FacebookIcon({ className = "size-[92px]" }: { className?: string
   );
 }
 
-export function SocialFollow({ text, smallOnPhones = false }: { text: string; smallOnPhones?: boolean }) {
+export function SocialFollow({ text, smallOnPhones = false, instagram = "#", facebook = "#" }: { text: string; smallOnPhones?: boolean; instagram?: string; facebook?: string }) {
   const icon = smallOnPhones ? "size-[92px] max-md:size-16" : "size-[92px]";
   const link = smallOnPhones ? "flex h-[102px] items-center max-md:h-[74px]" : "flex h-[102px] items-center";
   return (
     <section className="site-container flex flex-col items-center">
       <div className="flex flex-row justify-center gap-5 text-t-red">
-        <a href="#" aria-label="Instagram" className={link}><InstagramIcon className={icon} /></a>
-        <a href="#" aria-label="Facebook" className={link}><FacebookIcon className={icon} /></a>
+        <a href={instagram} aria-label="Instagram" className={link}><InstagramIcon className={icon} /></a>
+        <a href={facebook} aria-label="Facebook" className={link}><FacebookIcon className={icon} /></a>
       </div>
       <p className="w-[20%] pb-3.5 pt-[15px] text-center max-md:w-[232px]">{text}</p>
     </section>
