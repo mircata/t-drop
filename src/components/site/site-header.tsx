@@ -62,7 +62,7 @@ export function SiteHeader() {
 
         <nav className="hidden flex-1 items-center justify-end lg:flex">
           {NAV_ITEMS.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname === item.href || (item.href === "/your-profile" && pathname === "/my-account");
             return (
               <Link
                 key={item.href}
