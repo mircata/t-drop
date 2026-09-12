@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { pageTitle } from "@/components/site/shared";
 
 export const metadata: Metadata = { title: "Cart – T-Drop Monthly T-Shirts" };
 
@@ -24,7 +25,7 @@ function SadFace() {
 export default function CartPage() {
   return (
     <section className="site-container flex flex-col pt-2 md:max-lg:max-w-[600px] max-md:px-5">
-      <h1 className="font-body text-[40px] font-medium leading-[1.2] text-[#333]">Cart</h1>
+      <h1 className={pageTitle}>Cart</h1>
 
       <div className="mt-6 flex flex-col items-center">
         <SadFace />

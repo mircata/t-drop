@@ -23,7 +23,7 @@ const roboto = Roboto({
 
 const dot = DotGothic16({
   weight: "400",
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
   variable: "--font-dot",
 });
 
