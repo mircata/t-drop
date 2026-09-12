@@ -69,7 +69,7 @@ Local database: PostgreSQL 17 from Homebrew (`brew services start postgresql@17`
 ## Deploy (Vercel + Supabase)
 
 1. Supabase project in eu-central-1 (Frankfurt). In Project Settings > API, disable the Data API (REST) and GraphQL. Nothing in this app uses them.
-2. Take the direct Postgres connection string (port 5432, not the pooler) for migrations and the pooler string for runtime if connections run out. Put it in Vercel as `DATABASE_URI`.
+2. Connection string: the direct host (`db.<ref>.supabase.co`) has only an IPv6 address, so from a Mac without IPv6 it cannot be reached. Use the **Session pooler** string from the Connect dialog (port 5432, user `postgres.<ref>`) both locally and on Vercel; it works for migrations and runtime. Never the Transaction pooler (port 6543), Payload's migrations need session mode. Put it in Vercel as `DATABASE_URI`.
 3. Create a public bucket `media` in Supabase Storage, make S3 access keys in Storage settings, and fill the `S3_*` and `NEXT_PUBLIC_MEDIA_HOST` variables. Then run `npm run seed:content` once against production so images land in the bucket.
 4. Vercel project on the `main` branch, Node 22, build command `npm run build` (it runs `payload migrate` first, then `next build`). Set every variable from `.env.example`.
 5. After the first deploy, open `/admin`, create the first admin user, then set the Stripe price id on the plan.
