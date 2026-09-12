@@ -60,6 +60,8 @@ Local database: PostgreSQL 17 from Homebrew (`brew services start postgresql@17`
 
 ## Stripe setup
 
+State on 2026-09-12: the sandbox has the product, the monthly 17.99 EUR price (already on the plan in /admin) and a default Customer Portal configuration. The webhook is order-independent: if an invoice or subscription event arrives before the checkout session, the customer is created from the Stripe record.
+
 1. In the Stripe dashboard (sandbox until the owner picks the live account) create a product with a recurring monthly EUR price. Copy the `price_...` id into the plan in /admin > Планове.
 2. Put the secret key in `.env.local` as `STRIPE_SECRET_KEY`.
 3. Add a webhook endpoint for `https://<site>/webhooks/stripe` with the events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET`.

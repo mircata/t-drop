@@ -41,71 +41,97 @@ async function findCustomerByStripeId(payload: Payload, stripeCustomerId: string
   return r.docs[0] ?? null;
 }
 
-/**
- * The customer a Checkout Session belongs to. A signed-in buyer is found by the
- * id we put in client_reference_id; a guest is matched by email or created with
- * a random password and sent a "choose your password" email.
- */
-export async function customerFromSession(payload: Payload, session: Stripe.Checkout.Session): Promise<Customer> {
-  const stripeCustomerId = id(session.customer);
-  const email = session.customer_details?.email?.toLowerCase();
-  const name = session.customer_details?.name || email || "Клиент";
+type Identity = {
+  stripeCustomerId: string | null;
+  email?: string | null;
+  name?: string | null;
+  phone?: string | null;
+  address?: Customer["address"];
+  payloadCustomerId?: string | null;
+};
 
+/**
+ * Find the customer for a Stripe identity, or create one. Order of lookups:
+ * our id from client_reference_id / metadata, the Stripe customer id, then
+ * the email. A guest gets a verified account with a random password and a
+ * "choose your password" email. An existing Stripe link is never replaced.
+ */
+async function resolveCustomer(payload: Payload, who: Identity): Promise<Customer> {
+  const email = who.email?.toLowerCase();
   let customer: Customer | null = null;
-  if (session.client_reference_id) {
+
+  if (who.payloadCustomerId) {
     try {
-      customer = await payload.findByID({ collection: "customers", id: Number(session.client_reference_id) });
+      customer = await payload.findByID({ collection: "customers", id: Number(who.payloadCustomerId) });
     } catch {
       customer = null;
     }
   }
-  if (!customer && stripeCustomerId) customer = await findCustomerByStripeId(payload, stripeCustomerId);
+  if (!customer && who.stripeCustomerId) customer = await findCustomerByStripeId(payload, who.stripeCustomerId);
   if (!customer && email) {
     const r = await payload.find({ collection: "customers", where: { email: { equals: email } }, limit: 1 });
     customer = r.docs[0] ?? null;
   }
 
-  const shipping = session.collected_information?.shipping_details?.address;
-  const address = shipping
-    ? {
-        line1: shipping.line1 ?? "",
-        line2: shipping.line2 ?? "",
-        city: shipping.city ?? "",
-        postcode: shipping.postal_code ?? "",
-        country: shipping.country ?? "BG",
-      }
-    : undefined;
-  const phone = session.customer_details?.phone ?? undefined;
-
   if (!customer) {
-    if (!email) throw new Error(`Checkout session ${session.id} has no customer email`);
+    if (!email) throw new Error(`Stripe customer ${who.stripeCustomerId} has no email`);
     customer = await payload.create({
       collection: "customers",
       disableVerificationEmail: true,
       data: {
-        name,
+        name: who.name || email,
         email,
         password: randomBytes(24).toString("base64url"),
         _verified: true,
-        stripeCustomerId: stripeCustomerId ?? undefined,
-        address,
-        phone,
+        stripeCustomerId: who.stripeCustomerId ?? undefined,
+        address: who.address ?? undefined,
+        phone: who.phone ?? undefined,
       },
     });
     await sendWelcomeEmail(payload, customer);
     return customer;
   }
 
-  // Never replace an existing Stripe link: a guest who types someone else's email at
-  // checkout must not be able to point that account's portal at their own Stripe customer.
   const patch: Partial<Customer> = {};
-  if (stripeCustomerId && !customer.stripeCustomerId) patch.stripeCustomerId = stripeCustomerId;
-  if (address && !customer.address?.line1) patch.address = address;
-  if (phone && !customer.phone) patch.phone = phone;
+  if (who.stripeCustomerId && !customer.stripeCustomerId) patch.stripeCustomerId = who.stripeCustomerId;
+  if (who.address?.line1 && !customer.address?.line1) patch.address = who.address;
+  if (who.phone && !customer.phone) patch.phone = who.phone;
   if (Object.keys(patch).length > 0) {
     customer = await payload.update({ collection: "customers", id: customer.id, data: patch });
   }
   return customer;
+}
+
+/** The customer behind a Stripe customer id, created from the Stripe record when we have never seen it. */
+async function customerFromStripeId(payload: Payload, stripeCustomerId: string): Promise<Customer> {
+  const known = await findCustomerByStripeId(payload, stripeCustomerId);
+  if (known) return known;
+  const sc = await getStripe().customers.retrieve(stripeCustomerId);
+  if (sc.deleted) throw new Error(`Stripe customer ${stripeCustomerId} is deleted`);
+  const a = sc.shipping?.address ?? sc.address;
+  return resolveCustomer(payload, {
+    stripeCustomerId,
+    email: sc.email,
+    name: sc.name || sc.shipping?.name,
+    phone: sc.phone,
+    address: a ? { line1: a.line1 ?? "", line2: a.line2 ?? "", city: a.city ?? "", postcode: a.postal_code ?? "", country: a.country ?? "BG" } : undefined,
+    payloadCustomerId: sc.metadata?.payloadCustomerId,
+  });
+}
+
+/** The customer a Checkout Session belongs to. */
+export async function customerFromSession(payload: Payload, session: Stripe.Checkout.Session): Promise<Customer> {
+  const shipping = session.collected_information?.shipping_details?.address;
+  return resolveCustomer(payload, {
+    stripeCustomerId: id(session.customer),
+    email: session.customer_details?.email,
+    name: session.customer_details?.name,
+    phone: session.customer_details?.phone,
+    address: shipping
+      ? { line1: shipping.line1 ?? "", line2: shipping.line2 ?? "", city: shipping.city ?? "", postcode: shipping.postal_code ?? "", country: shipping.country ?? "BG" }
+      : undefined,
+    payloadCustomerId: session.client_reference_id || session.metadata?.payloadCustomerId,
+  });
 }
 
 async function sendWelcomeEmail(payload: Payload, customer: Customer) {
@@ -147,13 +173,20 @@ export async function upsertSubscription(
   const stripeCustomerId = id(sub.customer);
 
   let customer = customerId ?? null;
-  if (!customer && stripeCustomerId) customer = (await findCustomerByStripeId(payload, stripeCustomerId))?.id ?? null;
   if (!customer) {
     const existing = await payload.find({ collection: "subscriptions", where: { providerSubscriptionId: { equals: sub.id } }, limit: 1 });
     const row = existing.docs[0];
     customer = row ? (typeof row.customer === "number" ? row.customer : row.customer.id) : null;
   }
+  if (!customer && stripeCustomerId) customer = (await customerFromStripeId(payload, stripeCustomerId)).id;
   if (!customer) throw new Error(`No customer for Stripe subscription ${sub.id}`);
+
+  const m = sub.metadata ?? {};
+  const fromMeta = {
+    size: (m.size as Subscription["size"]) || undefined,
+    gender: (m.gender as Subscription["gender"]) || undefined,
+    orderName: m.orderName || undefined,
+  };
 
   const data = {
     customer,
@@ -166,6 +199,7 @@ export async function upsertSubscription(
     cancelAtPeriodEnd: Boolean(sub.cancel_at_period_end),
     canceledAt: iso(sub.canceled_at),
     startedAt: iso(sub.start_date),
+    ...fromMeta,
     ...extra,
   };
 
@@ -187,7 +221,7 @@ export async function upsertPayment(payload: Payload, invoice: Stripe.Invoice) {
     subscription = r.docs[0] ?? null;
   }
   let customerId: number | null = subscription ? (typeof subscription.customer === "number" ? subscription.customer : subscription.customer.id) : null;
-  if (!customerId && stripeCustomerId) customerId = (await findCustomerByStripeId(payload, stripeCustomerId))?.id ?? null;
+  if (!customerId && stripeCustomerId) customerId = (await customerFromStripeId(payload, stripeCustomerId)).id;
   if (!customerId) throw new Error(`No customer for invoice ${invoice.id}`);
 
   const paid = invoice.status === "paid";
