@@ -20,7 +20,7 @@ export default function YourProfilePage() {
           </label>
           <input id="username" name="username" className={input} />
         </p>
-        <p className="mt-10">
+        <p className="mt-3">
           <label className={label} htmlFor="password">
             Парола <span className="text-[#b81c23]">*</span>
           </label>
@@ -29,10 +29,10 @@ export default function YourProfilePage() {
             <span className="absolute right-4 top-1/2 -translate-y-1/2 font-roboto text-[18px] text-t-black" aria-hidden="true">👁</span>
           </span>
         </p>
-        <p className="mt-9 flex items-center gap-4">
+        <p className="mt-[25px] flex items-center gap-4">
           <button
             type="submit"
-            className="h-[52px] rounded-[3px] bg-[#5bc0de] px-10 font-headline text-[14px] uppercase leading-none tracking-[0.84px] text-white"
+            className="h-[38px] rounded-[3px] bg-[#5bc0de] px-[26px] font-headline text-[14px] uppercase leading-none tracking-[0.84px] text-white"
           >
             Влизане
           </button>
@@ -40,7 +40,7 @@ export default function YourProfilePage() {
             <input type="checkbox" name="rememberme" className="size-[13px]" /> Запомняне
           </label>
         </p>
-        <p className="mt-4 pb-1">
+        <p className="mt-1 pb-[9px]">
           <Link href="#" className="font-roboto text-[12px] text-[#5bc0de]">Изгубена парола?</Link>
         </p>
       </form>

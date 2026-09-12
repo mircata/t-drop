@@ -23,23 +23,23 @@ function SadFace() {
 
 export default function CartPage() {
   return (
-    <section className="site-container flex flex-col pt-2 max-md:px-5">
+    <section className="site-container flex flex-col pt-2 md:max-lg:max-w-[600px] max-md:px-5">
       <h1 className="font-body text-[40px] font-medium leading-[1.2] text-[#333]">Cart</h1>
 
-      <div className="mt-6 flex flex-col items-center py-4">
+      <div className="mt-6 flex flex-col items-center">
         <SadFace />
-        <p className="mt-6 text-[16px] font-medium text-[#333]">Your cart is currently empty!</p>
+        <p className="mt-3 text-[16px] font-medium text-[#333]">Your cart is currently empty!</p>
       </div>
 
-      <div className="my-2 flex justify-center gap-[70px] text-[10px] text-[#333]">
+      <div className="mt-4 flex h-6 items-center justify-center gap-[70px] text-[10px] text-[#333]">
         <span>•</span><span>•</span><span>•</span>
       </div>
 
       <h2 className="mt-2 text-center text-[32px] font-medium leading-[1.2] text-[#333]">New in store</h2>
 
-      <ul className="mt-4 flex flex-row max-md:flex-col">
+      <ul className="mt-[17px] flex flex-row max-md:flex-col">
         {PRODUCTS.map((p) => (
-          <li key={p.name} className="relative flex w-1/4 flex-col items-center px-3 py-0 max-md:w-full">
+          <li key={p.name} className="relative flex w-1/4 flex-col items-center px-3 pb-7 pt-0 max-md:w-full">
             <Link href="/join" className="block w-[300px] max-w-full">
               <Image src="/wp/2026/01/Rectangle-16.png" alt="" width={300} height={300} className="size-[300px] object-cover" />
             </Link>
@@ -51,10 +51,10 @@ export default function CartPage() {
             <Link href="/join" className="mt-[22px] w-[300px] text-center text-[12px] font-medium text-[#cc3366] underline">
               {p.name}
             </Link>
-            <div className="mt-[13px] text-center text-[12px]">{p.price}</div>
+            <div className="mt-[13px] h-[29px] text-center text-[12px] leading-[29px]">{p.price}</div>
             <Link
               href="/join"
-              className="mt-3 rounded-full bg-[#32373c] px-[18px] py-2.5 text-[12px] text-white underline"
+              className="mt-3 flex h-[49px] items-center rounded-full bg-[#32373c] px-[18px] text-[12px] text-white underline"
             >
               Select options
             </Link>

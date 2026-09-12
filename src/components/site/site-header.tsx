@@ -33,7 +33,7 @@ function MenuIcon() {
 export function SiteHeader() {
   const pathname = usePathname();
   return (
-    <header className="relative z-[500] min-h-[156px] pt-2.5 max-md:min-h-[118px] max-md:pt-0">
+    <header className="relative z-[500] min-h-[156px] pt-2.5 max-md:h-[118px] max-md:min-h-0 max-md:pt-0">
       {/* Announcement marquee, fixed to the top of the viewport like the Elementor header */}
       <div className="fixed inset-x-0 top-0 z-[500] bg-t-black">
         <div className="marquee py-[10px] font-body text-[24px] uppercase leading-[1.12] tracking-[0.04em] text-t-neon">
@@ -41,8 +41,8 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div className="site-container mt-10 flex min-h-[80px] items-center justify-between max-lg:px-5 max-md:mt-[19px] max-md:px-2.5 max-md:py-5">
-        <Link href="/" className="block w-[39%] max-lg:w-[13%] max-md:w-1/4">
+      <div className="site-container mt-10 flex min-h-[80px] items-center justify-between md:max-lg:px-5 max-md:mt-[39px] max-md:min-h-0 max-md:px-2.5">
+        <Link href="/" className="block w-[39%] md:max-lg:w-[13%] max-md:w-1/4">
           <Image
             src="/wp/2025/12/cs.png"
             alt="T-Drop Monthly T-Shirts"
@@ -60,7 +60,7 @@ export function SiteHeader() {
           />
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-end md:flex">
+        <nav className="hidden flex-1 items-center justify-end lg:flex">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
             return (
@@ -75,10 +75,10 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="ml-10 flex items-center gap-4 max-md:ml-0 max-md:flex-1 max-md:justify-between max-md:pl-[104px]">
+        <div className="ml-10 flex items-center gap-4 max-lg:ml-0 max-lg:flex-1 max-lg:justify-end max-md:gap-[68px]">
           <Sheet>
             <SheetTrigger
-              className="inline-flex size-[62px] items-center justify-center text-t-black md:hidden"
+              className="inline-flex size-[62px] items-center justify-center text-t-black md:max-lg:mx-auto lg:hidden"
               aria-label="Меню"
             >
               <MenuIcon />

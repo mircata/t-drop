@@ -46,8 +46,8 @@ export default function JoinPage() {
             </p>
           </div>
 
-          <form className="px-5 py-5 pl-7" action="#">
-            <div className="flex flex-col gap-4">
+          <form className="p-5" action="#">
+            <div className="mt-[18px] flex flex-col gap-4 pl-0.5">
               <div className="w-full">
                 <label className={label} htmlFor="gender">Пол{required}</label>
                 <select id="gender" name="gender" required className={`${field} mt-2`} defaultValue="male">
@@ -58,7 +58,7 @@ export default function JoinPage() {
 
               <fieldset className="w-full">
                 <legend className={label}>Размер{required}</legend>
-                <div className="mt-[11px] flex flex-row flex-wrap gap-x-5">
+                <div className="mt-[11px] flex flex-row flex-wrap gap-x-5 gap-y-[13px]">
                   {SIZES.map((s) => (
                     <label key={s} className={radio}>
                       <input type="radio" name="size" value={s.toLowerCase()} required className="mr-2.5 size-4 accent-t-red" />
@@ -70,7 +70,7 @@ export default function JoinPage() {
 
               <fieldset className="w-full">
                 <legend className={label}>Този месец предлагаме{required}</legend>
-                <div className="mt-[11px] flex flex-row flex-wrap gap-x-5">
+                <div className="mt-[11px] flex flex-row flex-wrap gap-x-5 gap-y-[13px]">
                   {THEMES.map((t) => (
                     <label key={t.label} className={radio}>
                       <input type="radio" name="theme" value={t.value} required className="mr-2.5 size-4 accent-t-red" />
@@ -88,7 +88,7 @@ export default function JoinPage() {
 
             <button
               type="submit"
-              className="mt-[57px] rounded-[60px] bg-t-red px-10 py-5 font-headline text-[28px] uppercase leading-none tracking-[0.84px] text-white hover:bg-t-neon hover:text-black"
+              className="ml-[-2px] mt-[57px] rounded-[60px] bg-t-red px-10 py-5 font-headline text-[28px] uppercase leading-none tracking-[0.84px] text-white hover:bg-t-neon hover:text-black"
             >
               Поръчай
             </button>
@@ -99,11 +99,13 @@ export default function JoinPage() {
       <section className="site-container flex flex-col max-md:px-5">
         <p className="h-[29px]">&nbsp;</p>
         <p className="mt-[15px]">Таблица с размери:</p>
-        <div className="mt-[14px] flex flex-row flex-wrap gap-x-[5px] gap-y-[21px] max-md:justify-center">
-          {SIZE_CHART.map((src) => (
-            <Image key={src} src={src} alt="" width={257} height={300} className="h-[300px] w-[257px]" />
-          ))}
-        </div>
+        {[SIZE_CHART.slice(0, 4), SIZE_CHART.slice(4)].map((group, i) => (
+          <div key={i} className={`flex flex-row flex-wrap gap-x-[5px] gap-y-[7px] max-md:justify-center ${i === 0 ? "mt-[14px]" : "mt-[21px]"}`}>
+            {group.map((src) => (
+              <Image key={src} src={src} alt="" width={257} height={300} className="h-[300px] w-[257px]" />
+            ))}
+          </div>
+        ))}
         <p className="mt-[22px]"><em>- Широчината се измерва 1см надолу от дупките за ръкавите</em></p>
         <p className="mt-[14px]"><em>- Дължината се измерва от най-високата част на раменете до най-долния ръб на дрехата</em></p>
       </section>

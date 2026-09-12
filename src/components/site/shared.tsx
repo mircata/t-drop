@@ -4,8 +4,11 @@ export const SHIRT =
   "/wp/2025/12/u2385526421_backround_blurry_style_design_-sref_httpss.mj_.ru_9b6359ca-3836-4215-b6da-d0520d3b4da6_1.png";
 
 /* Kit typography: Headline 72px Dela Gothic One, uppercase, line-height 112% */
-export const headline =
-  "font-headline text-[72px] uppercase leading-[1.12] text-t-red max-md:text-[40px]";
+export const headlineBase = "font-headline text-[72px] uppercase leading-[1.12] tracking-normal text-t-red";
+/* 72px on desktop, 40px on phones (the kit's mobile size for page titles) */
+export const headline = `${headlineBase} max-md:text-[40px]`;
+/* 72px on desktop, 36px on phones (used by the landing page section titles) */
+export const headline36 = `${headlineBase} max-md:text-[36px]`;
 /* Kit typography: Subheadline 21px Dela Gothic One, uppercase, letter-spacing 0.84px */
 export const subheadline = "font-headline text-[21px] uppercase leading-[1.12] tracking-[0.84px]";
 /* Kit button: 25px 40px padding, radius 50, Dela 21 uppercase */
@@ -42,14 +45,16 @@ export function FacebookIcon({ className = "size-[92px]" }: { className?: string
   );
 }
 
-export function SocialFollow({ text }: { text: string }) {
+export function SocialFollow({ text, smallOnPhones = false }: { text: string; smallOnPhones?: boolean }) {
+  const icon = smallOnPhones ? "size-[92px] max-md:size-16" : "size-[92px]";
+  const link = smallOnPhones ? "flex h-[102px] items-center max-md:h-[74px]" : "flex h-[102px] items-center";
   return (
     <section className="site-container flex flex-col items-center">
       <div className="flex flex-row justify-center gap-5 text-t-red">
-        <a href="#" aria-label="Instagram" className="flex h-[102px] items-center"><InstagramIcon className="size-[92px] max-md:size-16" /></a>
-        <a href="#" aria-label="Facebook" className="flex h-[102px] items-center"><FacebookIcon className="size-[92px] max-md:size-16" /></a>
+        <a href="#" aria-label="Instagram" className={link}><InstagramIcon className={icon} /></a>
+        <a href="#" aria-label="Facebook" className={link}><FacebookIcon className={icon} /></a>
       </div>
-      <p className="w-[20%] min-w-[256px] pb-3.5 pt-[15px] text-center max-md:w-[232px] max-md:min-w-0">{text}</p>
+      <p className="w-[20%] pb-3.5 pt-[15px] text-center max-md:w-[232px]">{text}</p>
     </section>
   );
 }

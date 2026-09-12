@@ -163,6 +163,11 @@
   --radius: 1.25rem;
 }
 
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   font-family: var(--font-body), sans-serif;
   font-size: 24px;

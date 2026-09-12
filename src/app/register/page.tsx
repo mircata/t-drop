@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { headline } from "@/components/site/shared";
+import { headlineBase } from "@/components/site/shared";
 
 export const metadata: Metadata = { title: "Register – T-Drop Monthly T-Shirts" };
 
@@ -11,10 +11,10 @@ const label = "mb-0 block text-[24px] leading-[34px]";
 export default function RegisterPage() {
   return (
     <section className="site-container flex flex-col items-center max-md:mt-10 max-md:px-5">
-      <h1 className={`${headline} max-md:text-[32px]`}>Акаунт</h1>
-      <div className="flex w-[36%] flex-col max-lg:w-[464px] max-md:w-full">
+      <h1 className={`${headlineBase} max-md:text-[32px]`}>Акаунт</h1>
+      <div className="flex w-[36%] flex-col md:max-lg:w-[464px] max-md:w-full">
         <p className="w-[74%] self-center text-center max-lg:w-[304px]">Чрез акаунта можете да управляте абонамента си.</p>
-        <form className="mt-10 flex flex-col gap-[25px] pb-10" action="#">
+        <form className="mt-[54px] flex flex-col gap-[25px] pb-10" action="#">
           <div>
             <label className={label} htmlFor="user">Username or Email Address</label>
             <input id="user" name="user" className={field} placeholder="Username or Email Address" />
@@ -28,7 +28,7 @@ export default function RegisterPage() {
           </label>
           <button
             type="submit"
-            className="w-full rounded-[50px] bg-t-red py-[25px] font-headline text-[21px] uppercase tracking-[0.84px] text-t-cream hover:bg-t-neon hover:text-t-black"
+            className="h-[71px] w-full rounded-[50px] bg-t-red font-headline text-[21px] uppercase leading-none tracking-[0.84px] text-t-cream hover:bg-t-neon hover:text-t-black"
           >
             Влез
           </button>
