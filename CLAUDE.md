@@ -1,77 +1,36 @@
-# Project Instructions for AI Agents
+# T-Drop, Next.js port
 
-This file provides instructions and context for AI coding agents working on this project.
+Monthly t-shirt subscription site for Bulgaria (t-drop.net). This repo replaces the WordPress site whose backup sits in `wordpress-site/t-drop.zip`.
 
-<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:6cd5cc61 -->
-## Beads Issue Tracker
-
-This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
-
-### Quick Reference
+## Run it
 
 ```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --claim  # Claim work
-bd close <id>         # Complete work
+npm install
+npm run dev
 ```
 
-### Rules
+Node 22 LTS and npm. No Bun. The dev server picks a free port when 3000 is busy.
 
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
-- Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+## Where things live
 
-**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
+- `src/app/` is one folder per page. `page.tsx` is the page. Routes match the old WordPress slugs: `/`, `/about`, `/join`, `/register`, `/your-profile`, `/cart`, `/checkout`, `/payment-confirmation`, `/payment-failed`.
+- `src/components/site/` holds the header, footer and shared bits (buttons, badges, the shirt image, social icons).
+- `src/components/ui/` is shadcn. Add more with `npx shadcn@latest add <name>`.
+- `src/app/globals.css` defines the design tokens. Colors start with `t-` (`bg-t-red`, `text-t-neon`). Fonts are `font-headline` (Dela Gothic One), `font-body` (Handjet), `font-dot` (DotGothic16), `font-roboto`.
+- `public/wp/` holds every image from the WordPress uploads folder, same paths minus `wp-content/uploads`.
+- `reference/tokens.md` lists the colors, type sizes and page map pulled from the Elementor kit. `reference/screenshots/` has the WordPress renders each page is compared against.
 
-## Agent Context Profiles
+## Rules for edits
 
-The managed Beads block is task-tracking guidance, not permission to override repository, user, or orchestrator instructions.
+- Copy stays in Bulgarian exactly as on the old site until the owner changes it.
+- Milestone v0.1 is visual only. No Stripe, no auth, no database. Forms post to `#`.
+- Next.js 16 differs from older versions. Read `node_modules/next/dist/docs/` before touching routing, fonts or metadata.
+- Widths and offsets in the pages are copied from Elementor pixel values on purpose. Change them only when a screenshot comparison says so.
 
-- **Conservative (default)**: Use `bd` for task tracking. Do not run git commits, git pushes, or Dolt remote sync unless explicitly asked. At handoff, report changed files, validation, and suggested next commands.
-- **Minimal**: Keep tool instruction files as pointers to `bd prime`; use the same conservative git policy unless active instructions say otherwise.
-- **Team-maintainer**: Only when the repository explicitly opts in, agents may close beads, run quality gates, commit, and push as part of session close. A current "do not commit" or "do not push" instruction still wins.
+## Issue tracking
 
-## Session Completion
+Issues live in beads. Run `bd ready` to see what is unblocked and `bd show <id>` for details. The epic for this milestone is `tdrop-xg2`. Close a task with `bd close <id> --reason "..."` when its page matches the reference.
 
-This protocol applies when ending a Beads implementation workflow. It is subordinate to explicit user, repository, and orchestrator instructions.
+## Later milestones
 
-1. **File issues for remaining work** - Create beads for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **Handle git/sync by active profile**:
-   ```bash
-   # Conservative/minimal/default: report status and proposed commands; wait for approval.
-   git status
-
-   # Team-maintainer opt-in only, unless current instructions forbid it:
-   git pull --rebase
-   git push
-   git status
-   ```
-5. **Hand off** - Summarize changes, validation, issue status, and any blocked sync/commit/push step
-
-**Critical rules:**
-- Explicit user or orchestrator instructions override this Beads block.
-- Do not commit or push without clear authority from the active profile or the current user request.
-- If a required sync or push is blocked, stop and report the exact command and error.
-<!-- END BEADS INTEGRATION -->
-
-
-## Build & Test
-
-_Add your build and test commands here_
-
-```bash
-# Example:
-# npm install
-# npm test
-```
-
-## Architecture Overview
-
-_Add a brief overview of your project architecture_
-
-## Conventions & Patterns
-
-_Add your project-specific conventions here_
+Payload CMS inside this app for editable content and admin, Supabase Postgres in Frankfurt, Stripe Checkout and Customer Portal, Vercel hosting. See the beads epic list when those start.

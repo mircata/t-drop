@@ -117,3 +117,15 @@ dist
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Next.js / editor
+.DS_Store
+/.next/
+/out/
+.vercel
+.env*
+next-env.d.ts
+*.pem
+
+# WordPress backup archive (143 MB, over the GitHub file limit); keep it local
+wordpress-site/*.zip
