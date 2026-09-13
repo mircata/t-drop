@@ -73,7 +73,14 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URI || "",
+      // Migrations need a session-mode connection; on Supabase that is the session pooler.
+      // Runtime on Vercel uses DATABASE_URI, the transaction pooler (port 6543), which shares
+      // a few server connections across many serverless instances. Locally both can be the same.
+      connectionString:
+        (process.argv.some((a) => a.startsWith("migrate")) && process.env.DATABASE_URI_SESSION) || process.env.DATABASE_URI || "",
+      // Each serverless instance keeps at most this many connections and drops idle ones fast.
+      max: Number(process.env.DATABASE_POOL_MAX || 3),
+      idleTimeoutMillis: 10_000,
     },
     // Schema changes go through committed migrations in src/migrations,
     // never through Drizzle push, so local dev and Supabase stay in step.

@@ -86,8 +86,10 @@ State on 2026-09-12: the sandbox has the product, the monthly 17.99 EUR price (a
 
 ## Deploy (Vercel + Supabase)
 
+State on 2026-09-13: deployed at https://t-drop-t-drop.vercel.app from the Vercel team `t-drop`, project `t-drop`, git-connected to `main`. Every push to `main` runs CI on GitHub and a production build on Vercel. Environment variables for Production and Preview are set; change them with `vercel env` or in the Vercel dashboard, never in code. The sandbox webhook endpoint points at that URL. Still to do: point t-drop.net at Vercel, create the first /admin user, add `RESEND_API_KEY`.
+
 1. Supabase project in eu-central-1 (Frankfurt). In Project Settings > API, disable the Data API (REST) and GraphQL. Nothing in this app uses them.
-2. Connection string: the direct host (`db.<ref>.supabase.co`) has only an IPv6 address, so from a Mac without IPv6 it cannot be reached. Use the **Session pooler** string from the Connect dialog (port 5432, user `postgres.<ref>`) both locally and on Vercel; it works for migrations and runtime. Never the Transaction pooler (port 6543), Payload's migrations need session mode. Put it in Vercel as `DATABASE_URI`.
+2. Connection strings, two of them. The direct host (`db.<ref>.supabase.co`) is IPv6-only and unreachable from a Mac without IPv6, so both come from the Connect dialog's pooler tabs. On Vercel `DATABASE_URI` is the **Transaction pooler** string (port 6543): serverless instances come and go and the session pooler's 15-client cap fills up in seconds, which shows as "There was an error initializing Payload" on every dynamic route. `DATABASE_URI_SESSION` is the **Session pooler** string (port 5432) and only `payload migrate` uses it, because migrations need session mode. Locally, the session string alone in `DATABASE_URI` is fine.
 3. Create a public bucket `media` in Supabase Storage, make S3 access keys in Storage settings, and fill the `S3_*` and `NEXT_PUBLIC_MEDIA_HOST` variables. Then run `npm run seed:content` once against production so images land in the bucket.
 4. Vercel project on the `main` branch, Node 22, build command `npm run build` (it runs `payload migrate` first, then `next build`). Set every variable from `.env.example`.
 5. After the first deploy, open `/admin`, create the first admin user, then set the Stripe price id on the plan.
