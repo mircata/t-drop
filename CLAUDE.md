@@ -96,7 +96,7 @@ State on 2026-09-13: deployed at https://t-drop-t-drop.vercel.app from the Verce
 
 ## Issue tracking
 
-Issues live in beads. Run `bd ready` to see what is unblocked and `bd show <id>` for details. The epic for v0.1 was `tdrop-xg2`; v0.2 is `tdrop-oaz`. Close a task with `bd close <id> --reason "..."` when its page matches the reference.
+Issues live in beads. Run `bd ready` to see what is unblocked and `bd show <id>` for details. The epic for v0.1 was `tdrop-xg2`, v0.2 was `tdrop-oaz`, v0.3 is `tdrop-f1f` (see `docs/handoff-v0.3.md`). Close a task with `bd close <id> --reason "..."` when its page matches the reference.
 
 ## Later milestones
 
