@@ -75,21 +75,29 @@ async function resolveCustomer(payload: Payload, who: Identity): Promise<Custome
 
   if (!customer) {
     if (!email) throw new Error(`Stripe customer ${who.stripeCustomerId} has no email`);
-    customer = await payload.create({
-      collection: "customers",
-      disableVerificationEmail: true,
-      data: {
-        name: who.name || email,
-        email,
-        password: randomBytes(24).toString("base64url"),
-        _verified: true,
-        stripeCustomerId: who.stripeCustomerId ?? undefined,
-        address: who.address ?? undefined,
-        phone: who.phone ?? undefined,
-      },
-    });
-    await sendWelcomeEmail(payload, customer);
-    return customer;
+    try {
+      customer = await payload.create({
+        collection: "customers",
+        disableVerificationEmail: true,
+        data: {
+          name: who.name || email,
+          email,
+          password: randomBytes(24).toString("base64url"),
+          _verified: true,
+          stripeCustomerId: who.stripeCustomerId ?? undefined,
+          address: who.address ?? undefined,
+          phone: who.phone ?? undefined,
+        },
+      });
+      await sendWelcomeEmail(payload, customer);
+      return customer;
+    } catch (err) {
+      // Two events for a new buyer often land in the same second (subscription.created and
+      // invoice.paid). The loser of that race finds the row the winner just made.
+      const r = await payload.find({ collection: "customers", where: { email: { equals: email } }, limit: 1 });
+      if (!r.docs[0]) throw err;
+      customer = r.docs[0];
+    }
   }
 
   const patch: Partial<Customer> = {};
@@ -207,11 +215,18 @@ export async function upsertSubscription(
   if (existing.docs[0]) {
     return payload.update({ collection: "subscriptions", id: existing.docs[0].id, data });
   }
-  return payload.create({ collection: "subscriptions", data });
+  const row = await payload.create({ collection: "subscriptions", data });
+  // Invoices that arrived before this row know the Stripe id but have no link yet.
+  await payload.update({
+    collection: "payments",
+    where: { and: [{ providerSubscriptionId: { equals: sub.id } }, { subscription: { exists: false } }] },
+    data: { subscription: row.id },
+  });
+  return row;
 }
 
 /** Create or update our payment row for a Stripe invoice. */
-export async function upsertPayment(payload: Payload, invoice: Stripe.Invoice) {
+export async function upsertPayment(payload: Payload, invoice: Stripe.Invoice, opts: { failed?: boolean } = {}) {
   const subId = id(invoice.parent?.subscription_details?.subscription);
   const stripeCustomerId = id(invoice.customer);
 
@@ -225,10 +240,12 @@ export async function upsertPayment(payload: Payload, invoice: Stripe.Invoice) {
   if (!customerId) throw new Error(`No customer for invoice ${invoice.id}`);
 
   const paid = invoice.status === "paid";
-  const status = paid ? "paid" : invoice.status === "open" || invoice.status === "draft" ? "pending" : "failed";
+  // A payment_failed event says the attempt failed even though Stripe keeps the invoice "open" for retries.
+  const status = paid ? "paid" : opts.failed ? "failed" : invoice.status === "open" || invoice.status === "draft" ? "pending" : "failed";
   const data = {
     customer: customerId,
     subscription: subscription?.id ?? null,
+    providerSubscriptionId: subId ?? undefined,
     provider: "stripe" as const,
     providerPaymentId: invoice.id!,
     amountCents: paid ? invoice.amount_paid : invoice.amount_due,
@@ -299,9 +316,11 @@ export async function handleStripeEvent(payload: Payload, event: Stripe.Event) {
       await upsertSubscription(payload, event.data.object);
       return;
     case "invoice.paid":
-    case "invoice.payment_failed":
     case "invoice.payment_succeeded":
       await upsertPayment(payload, event.data.object);
+      return;
+    case "invoice.payment_failed":
+      await upsertPayment(payload, event.data.object, { failed: true });
       return;
     default:
       return;

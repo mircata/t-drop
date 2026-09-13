@@ -1,0 +1,458 @@
+[
+  {
+    "id": "evt_1UEyPUCxAYTvDqO2mexXwtQ5",
+    "object": "event",
+    "type": "invoice.paid",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789248272,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "in_1UEyPRCxAYTvDqO2K01c5ez2",
+        "object": "invoice",
+        "customer": "cus_VFTM3P8Grs99lC",
+        "status": "paid",
+        "amount_due": 1799,
+        "amount_paid": 1799,
+        "currency": "eur",
+        "number": "9VMPG7ZF-0001",
+        "hosted_invoice_url": "https://invoice.stripe.com/i/acct_1UElr4CxAYTvDqO2/test_YWNjdF8xVUVscjRDeEFZVHZEcU8yLF9WRlRNbjdSTXRhYmNyWUFob1hyNjllbDRhY3ZNcngzLDE3OTc4OTA3Mg0200MjeobfTr?s=ap",
+        "period_start": 1789248269,
+        "period_end": 1789248269,
+        "attempt_count": 1,
+        "status_transitions": {
+          "finalized_at": 1789248269,
+          "marked_uncollectible_at": null,
+          "paid_at": 1789248269,
+          "voided_at": null
+        },
+        "parent": {
+          "type": "subscription_details",
+          "subscription_details": {
+            "subscription": "sub_1UEyPRCxAYTvDqO2UluyHsV2"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UEyPVCxAYTvDqO25Dj1i6zW",
+    "object": "event",
+    "type": "customer.subscription.created",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789248272,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "sub_1UEyPRCxAYTvDqO2UluyHsV2",
+        "object": "subscription",
+        "customer": "cus_VFTM3P8Grs99lC",
+        "status": "active",
+        "cancel_at_period_end": false,
+        "canceled_at": null,
+        "start_date": 1789248269,
+        "metadata": {
+          "categoryId": "2",
+          "gender": "male",
+          "orderName": "e2e",
+          "size": "l"
+        },
+        "items": {
+          "object": "list",
+          "data": [
+            {
+              "id": "si_VFTMXf3A2khOZ0",
+              "object": "subscription_item",
+              "current_period_end": 1791840269,
+              "price": {
+                "id": "price_1UEyODCxAYTvDqO27crKlqa2",
+                "object": "price"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UEySxCxAYTvDqO2ieKKbZMS",
+    "object": "event",
+    "type": "customer.subscription.deleted",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789248487,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "sub_1UEyPRCxAYTvDqO2UluyHsV2",
+        "object": "subscription",
+        "customer": "cus_VFTM3P8Grs99lC",
+        "status": "canceled",
+        "cancel_at_period_end": false,
+        "canceled_at": 1789248487,
+        "start_date": 1789248269,
+        "metadata": {
+          "categoryId": "2",
+          "gender": "male",
+          "orderName": "e2e",
+          "size": "l"
+        },
+        "items": {
+          "object": "list",
+          "data": [
+            {
+              "id": "si_VFTMXf3A2khOZ0",
+              "object": "subscription_item",
+              "current_period_end": 1791840269,
+              "price": {
+                "id": "price_1UEyODCxAYTvDqO27crKlqa2",
+                "object": "price"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UF5q4CxAYTvDqO2Ro8DRLBt",
+    "object": "event",
+    "type": "invoice.paid",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789276827,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "in_1UF5q2CxAYTvDqO2ULg4fYBb",
+        "object": "invoice",
+        "customer": "cus_VFb2QKFBYLkBZ3",
+        "status": "paid",
+        "amount_due": 1799,
+        "amount_paid": 1799,
+        "currency": "eur",
+        "number": "SKAFLZNM-0001",
+        "hosted_invoice_url": "https://invoice.stripe.com/i/acct_1UElr4CxAYTvDqO2/test_YWNjdF8xVUVscjRDeEFZVHZEcU8yLF9WRmIyd0V0RW5QRmRoOGJ6ckFnMktKVEdsM0pGZ0dzLDE3OTgxNzYyOA0200AW8bVxi3?s=ap",
+        "period_start": 1789276824,
+        "period_end": 1789276824,
+        "attempt_count": 1,
+        "status_transitions": {
+          "finalized_at": 1789276824,
+          "marked_uncollectible_at": null,
+          "paid_at": 1789276824,
+          "voided_at": null
+        },
+        "parent": {
+          "type": "subscription_details",
+          "subscription_details": {
+            "subscription": "sub_1UF5q1CxAYTvDqO2Zhi2BuJK"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UF5q4CxAYTvDqO2MjCcBlrA",
+    "object": "event",
+    "type": "customer.subscription.created",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789276827,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "sub_1UF5q1CxAYTvDqO2Zhi2BuJK",
+        "object": "subscription",
+        "customer": "cus_VFb2QKFBYLkBZ3",
+        "status": "active",
+        "cancel_at_period_end": false,
+        "canceled_at": null,
+        "start_date": 1789276824,
+        "metadata": {
+          "categoryId": "1",
+          "gender": "male",
+          "orderName": "Клок Клиент",
+          "size": "l"
+        },
+        "items": {
+          "object": "list",
+          "data": [
+            {
+              "id": "si_VFb2xbIdk1EMCE",
+              "object": "subscription_item",
+              "current_period_end": 1791868824,
+              "price": {
+                "id": "price_1UEyODCxAYTvDqO27crKlqa2",
+                "object": "price"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UF5qECxAYTvDqO2zn7ghG1K",
+    "object": "event",
+    "type": "customer.subscription.updated",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789276838,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "sub_1UF5q1CxAYTvDqO2Zhi2BuJK",
+        "object": "subscription",
+        "customer": "cus_VFb2QKFBYLkBZ3",
+        "status": "active",
+        "cancel_at_period_end": false,
+        "canceled_at": null,
+        "start_date": 1789276824,
+        "metadata": {
+          "categoryId": "1",
+          "gender": "male",
+          "orderName": "Клок Клиент",
+          "size": "l"
+        },
+        "items": {
+          "object": "list",
+          "data": [
+            {
+              "id": "si_VFb2xbIdk1EMCE",
+              "object": "subscription_item",
+              "current_period_end": 1794547224,
+              "price": {
+                "id": "price_1UEyODCxAYTvDqO27crKlqa2",
+                "object": "price"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UF5qKCxAYTvDqO2hF2Bbopw",
+    "object": "event",
+    "type": "invoice.paid",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789276843,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "in_1UF5qDCxAYTvDqO2SwwIfvd4",
+        "object": "invoice",
+        "customer": "cus_VFb2QKFBYLkBZ3",
+        "status": "paid",
+        "amount_due": 1799,
+        "amount_paid": 1799,
+        "currency": "eur",
+        "number": "SKAFLZNM-0002",
+        "hosted_invoice_url": "https://invoice.stripe.com/i/acct_1UElr4CxAYTvDqO2/test_YWNjdF8xVUVscjRDeEFZVHZEcU8yLF9WRmIydkgwZkVLWExKNUIxbHMxdUhIM0NnNHlUSXZjLDE3OTgxNzY0NA0200frFZ5rIG?s=ap",
+        "period_start": 1789276824,
+        "period_end": 1791868824,
+        "attempt_count": 1,
+        "status_transitions": {
+          "finalized_at": 1791872424,
+          "marked_uncollectible_at": null,
+          "paid_at": 1791872424,
+          "voided_at": null
+        },
+        "parent": {
+          "type": "subscription_details",
+          "subscription_details": {
+            "subscription": "sub_1UF5q1CxAYTvDqO2Zhi2BuJK"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UF5qUCxAYTvDqO2CVi88dVl",
+    "object": "event",
+    "type": "invoice.payment_failed",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789276853,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "in_1UF5qSCxAYTvDqO2dAUUS0Nw",
+        "object": "invoice",
+        "customer": "cus_VFb2UHfzYBjoIh",
+        "status": "open",
+        "amount_due": 1799,
+        "amount_paid": 0,
+        "currency": "eur",
+        "number": null,
+        "hosted_invoice_url": "https://invoice.stripe.com/i/acct_1UElr4CxAYTvDqO2/test_YWNjdF8xVUVscjRDeEFZVHZEcU8yLF9WRmIydFBzZ1hlcFlLVkpuWkV3ZGwxTkhadjhMa0FzLDE3OTgxNzY1NA0200rH1Ic9zn?s=ap",
+        "period_start": 1789276851,
+        "period_end": 1789276851,
+        "attempt_count": 1,
+        "status_transitions": {
+          "finalized_at": 1789276851,
+          "marked_uncollectible_at": null,
+          "paid_at": null,
+          "voided_at": null
+        },
+        "parent": {
+          "type": "subscription_details",
+          "subscription_details": {
+            "subscription": "sub_1UF5qSCxAYTvDqO2gAtfcCVN"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UF5qTCxAYTvDqO2aLyH3AZD",
+    "object": "event",
+    "type": "customer.subscription.created",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789276853,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "sub_1UF5qSCxAYTvDqO2gAtfcCVN",
+        "object": "subscription",
+        "customer": "cus_VFb2UHfzYBjoIh",
+        "status": "incomplete",
+        "cancel_at_period_end": false,
+        "canceled_at": null,
+        "start_date": 1789276851,
+        "metadata": {
+          "categoryId": "1",
+          "gender": "male",
+          "orderName": "Отказ Клиент",
+          "size": "l"
+        },
+        "items": {
+          "object": "list",
+          "data": [
+            {
+              "id": "si_VFb2HsiYCZ89es",
+              "object": "subscription_item",
+              "current_period_end": 1791868851,
+              "price": {
+                "id": "price_1UEyODCxAYTvDqO27crKlqa2",
+                "object": "price"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UF5qdCxAYTvDqO2lwlKgVmb",
+    "object": "event",
+    "type": "customer.subscription.updated",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789276862,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "sub_1UF5qSCxAYTvDqO2gAtfcCVN",
+        "object": "subscription",
+        "customer": "cus_VFb2UHfzYBjoIh",
+        "status": "incomplete_expired",
+        "cancel_at_period_end": false,
+        "canceled_at": 1789359651,
+        "start_date": 1789276851,
+        "metadata": {
+          "categoryId": "1",
+          "gender": "male",
+          "orderName": "Отказ Клиент",
+          "size": "l"
+        },
+        "items": {
+          "object": "list",
+          "data": [
+            {
+              "id": "si_VFb2HsiYCZ89es",
+              "object": "subscription_item",
+              "current_period_end": 1791868851,
+              "price": {
+                "id": "price_1UEyODCxAYTvDqO27crKlqa2",
+                "object": "price"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UF5r6CxAYTvDqO2pqfjV5qV",
+    "object": "event",
+    "type": "customer.subscription.updated",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789276892,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "sub_1UF5q1CxAYTvDqO2Zhi2BuJK",
+        "object": "subscription",
+        "customer": "cus_VFb2QKFBYLkBZ3",
+        "status": "active",
+        "cancel_at_period_end": true,
+        "canceled_at": 1792041632,
+        "start_date": 1789276824,
+        "metadata": {
+          "categoryId": "1",
+          "gender": "male",
+          "orderName": "Клок Клиент",
+          "size": "l"
+        },
+        "items": {
+          "object": "list",
+          "data": [
+            {
+              "id": "si_VFb2xbIdk1EMCE",
+              "object": "subscription_item",
+              "current_period_end": 1794547224,
+              "price": {
+                "id": "price_1UEyODCxAYTvDqO27crKlqa2",
+                "object": "price"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_1UF5rBCxAYTvDqO2BljvJ10A",
+    "object": "event",
+    "type": "customer.subscription.deleted",
+    "api_version": "2026-08-26.dahlia",
+    "created": 1789276896,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "sub_1UF5q1CxAYTvDqO2Zhi2BuJK",
+        "object": "subscription",
+        "customer": "cus_VFb2QKFBYLkBZ3",
+        "status": "canceled",
+        "cancel_at_period_end": false,
+        "canceled_at": 1792041632,
+        "start_date": 1789276824,
+        "metadata": {
+          "categoryId": "1",
+          "gender": "male",
+          "orderName": "Клок Клиент",
+          "size": "l"
+        },
+        "items": {
+          "object": "list",
+          "data": [
+            {
+              "id": "si_VFb2xbIdk1EMCE",
+              "object": "subscription_item",
+              "current_period_end": 1794547224,
+              "price": {
+                "id": "price_1UEyODCxAYTvDqO27crKlqa2",
+                "object": "price"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+]

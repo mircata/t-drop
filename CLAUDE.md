@@ -51,6 +51,22 @@ Local database: PostgreSQL 17 from Homebrew (`brew services start postgresql@17`
 - Home and About render from Payload (pages `home` and `about`). If a page is missing in the database the route 404s; run `npm run seed:content` to load the copy. The other pages are still hard-coded JSX until their tasks land.
 - Text fields render line breaks as `<br>` through the `Lines` helper, so an editor can break a heading by pressing Enter.
 
+## Tests
+
+```bash
+createdb tdrop_test                                   # once
+DATABASE_URI=postgres://localhost:5432/tdrop_test npm run migrate   # once, and after each new migration
+npm test                                              # Vitest: Stripe sync and access rules, against tdrop_test
+DATABASE_URI=postgres://localhost:5432/tdrop_test S3_BUCKET= npm run seed:content
+npm run test:e2e                                      # Playwright: sign-up, login, drop pick, newsletter, on port 3111
+```
+
+- `tests/unit/stripe-sync.test.ts` feeds hand-built Stripe events (`tests/unit/fixtures/stripe.ts`) through `handleStripeEvent` and checks the rows. Add a fixture for every new event shape you meet in the sandbox.
+- `tests/unit/stripe-sandbox.test.ts` replays `tests/unit/fixtures/sandbox/lifecycle-events.json`, real events recorded from the sandbox with test clocks (first invoice, renewal, failed card, cancel), in order and two at once. To record new ones, run the scenario against a listener and save the events list trimmed to the fields the sync reads.
+- `tests/unit/access.test.ts` calls the Local API with `overrideAccess: false` as anonymous and as a customer. Every new collection needs a line there.
+- The unit tests empty the tables, so run the seed after them before the browser tests.
+- `.github/workflows/ci.yml` runs lint, typecheck, both suites and the build on every push to main and every pull request, against a Postgres service.
+
 ## Security rules
 
 - Every collection and global sets `access` for every operation. Payload's default is "any logged-in user", and customers are logged-in users, so a missing rule lets a customer write admin data. Use the helpers in `src/lib/access.ts`.

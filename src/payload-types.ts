@@ -429,6 +429,7 @@ export interface Payment {
   id: number;
   customer: number | Customer;
   subscription?: (number | null) | Subscription;
+  providerSubscriptionId?: string | null;
   provider: 'stripe' | 'other';
   providerPaymentId: string;
   amountCents: number;
@@ -875,6 +876,7 @@ export interface SubscriptionsSelect<T extends boolean = true> {
 export interface PaymentsSelect<T extends boolean = true> {
   customer?: T;
   subscription?: T;
+  providerSubscriptionId?: T;
   provider?: T;
   providerPaymentId?: T;
   amountCents?: T;

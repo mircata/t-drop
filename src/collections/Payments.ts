@@ -17,6 +17,7 @@ export const Payments: CollectionConfig = {
   fields: [
     { name: "customer", type: "relationship", relationTo: "customers", label: "Клиент", required: true, index: true },
     { name: "subscription", type: "relationship", relationTo: "subscriptions", label: "Абонамент", index: true },
+    { name: "providerSubscriptionId", type: "text", label: "Абонамент при доставчика (sub_...)", index: true, admin: { readOnly: true } },
     {
       name: "provider",
       type: "select",

@@ -135,3 +135,7 @@ wordpress-site/*.zip
 
 # Payload uploads (local dev); production uses a bucket
 /public/media/
+
+# tests
+/test-results/
+/playwright-report/
