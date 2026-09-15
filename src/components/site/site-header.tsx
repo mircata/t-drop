@@ -3,17 +3,24 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 export type NavItem = { href: string; label: string };
+type HeaderNavItem = NavItem & { accent?: boolean };
 
-function BagIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={`${className} fill-current`} aria-hidden="true">
-      <path d="M17 7V6a5 5 0 0 0-10 0v1H4v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7h-3zM9 6a3 3 0 0 1 6 0v1H9V6z" />
-    </svg>
-  );
-}
+/* Figma "MENU HEADER states" (2026-09-16): the header nav is now just these
+   2-3 links, swapped by whether a customer is signed in — not the full CMS
+   nav list anymore (that's still admin-editable, just no longer shown here). */
+const LOGGED_OUT_NAV: HeaderNavItem[] = [
+  { href: "/join", label: "Запиши се", accent: true },
+  { href: "/about", label: "За нас" },
+  { href: "/register", label: "Вход" },
+];
+const LOGGED_IN_NAV: HeaderNavItem[] = [
+  { href: "/about", label: "За нас" },
+  { href: "/account", label: "Акаунт" },
+];
 
 function MenuIcon() {
   return (
@@ -23,8 +30,25 @@ function MenuIcon() {
   );
 }
 
-export function SiteHeader({ announcement, nav }: { announcement: string; nav: NavItem[] }) {
+export function SiteHeader({ announcement }: { announcement: string }) {
   const pathname = usePathname();
+  // Defaults to the logged-out nav (correct for the vast majority of marketing-page
+  // visitors) and swaps in a quick client fetch — see /auth-status for why this
+  // isn't just read server-side in the (site) layout.
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/auth-status")
+      .then((res) => res.json())
+      .then((data: { loggedIn: boolean }) => {
+        if (!cancelled) setLoggedIn(data.loggedIn);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const nav = loggedIn ? LOGGED_IN_NAV : LOGGED_OUT_NAV;
   return (
     <header className="relative z-[500] min-h-[156px] pt-2.5 max-md:h-[118px] max-md:min-h-0 max-md:pt-0">
       {/* Announcement marquee, fixed to the top of the viewport like the Elementor header */}
@@ -34,7 +58,7 @@ export function SiteHeader({ announcement, nav }: { announcement: string; nav: N
         </div>
       </div>
 
-      <div className="site-container mt-10 flex min-h-[80px] items-center justify-between md:max-lg:px-5 max-md:mt-[39px] max-md:min-h-0 max-md:px-2.5">
+      <div className="site-container mt-16 flex min-h-[80px] items-center justify-between md:max-lg:px-5 max-md:mt-14 max-md:min-h-0 max-md:px-2.5">
         <Link href="/" className="block w-[39%] md:max-lg:w-[13%] max-md:w-1/4">
           <Image
             src="/wp/2025/12/cs.png"
@@ -55,12 +79,14 @@ export function SiteHeader({ announcement, nav }: { announcement: string; nav: N
 
         <nav className="hidden flex-1 items-center justify-end lg:flex">
           {nav.map((item) => {
-            const active = pathname === item.href || (item.href === "/your-profile" && pathname === "/my-account");
+            const active = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-5 py-[13px] font-headline text-[21px] uppercase leading-[1.12] tracking-[0.84px] hover:text-t-red ${active ? "text-t-red" : "text-t-black"}`}
+                className={`px-5 py-[13px] font-headline text-[14px] uppercase leading-[1.12] tracking-[0.84px] hover:text-t-red ${
+                  item.accent || active ? "text-t-red" : "text-[#686868]"
+                }`}
               >
                 {item.label}
               </Link>
@@ -68,7 +94,7 @@ export function SiteHeader({ announcement, nav }: { announcement: string; nav: N
           })}
         </nav>
 
-        <div className="ml-10 flex items-center gap-4 max-lg:ml-0 max-lg:flex-1 max-lg:justify-end max-md:gap-[68px]">
+        <div className="ml-10 flex items-center max-lg:ml-0 max-lg:flex-1 max-lg:justify-end">
           <Sheet>
             <SheetTrigger
               className="inline-flex size-[62px] items-center justify-center text-t-black md:max-lg:mx-auto lg:hidden"
@@ -83,7 +109,7 @@ export function SiteHeader({ announcement, nav }: { announcement: string; nav: N
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="font-headline text-[21px] uppercase tracking-[0.84px] text-t-black"
+                    className={`font-headline text-[21px] uppercase tracking-[0.84px] ${item.accent ? "text-t-red" : "text-t-black"}`}
                   >
                     {item.label}
                   </Link>
@@ -91,15 +117,6 @@ export function SiteHeader({ announcement, nav }: { announcement: string; nav: N
               </nav>
             </SheetContent>
           </Sheet>
-          <Link
-            href="/cart"
-            aria-label="Количка"
-            className="flex h-[87px] items-center gap-1.5 rounded-[24px] border-[3px] border-[#69727d] px-5 text-[#69727d] max-md:h-[50px] max-md:w-[79px] max-md:justify-center max-md:px-0"
-          >
-            <span className="font-headline text-[28px] leading-none max-md:text-[17px]">0</span>
-            <BagIcon className="size-8 max-md:size-[17px]" />
-          </Link>
-
         </div>
       </div>
     </header>

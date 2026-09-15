@@ -19,7 +19,7 @@ const badgeBase = "absolute rounded-[25px] px-5 py-[15px] text-center uppercase 
 export const badge = `${badgeBase} font-body text-[24px] tracking-[0.04em]`;
 export const badgeNeon = `${badge} bg-t-neon text-t-black`;
 export const badgeRed = `${badge} bg-t-red text-white`;
-/* DotGothic16 variant used for the "ЕКО Материя" sticker */
+/* Handjet variant used for the "ЕКО Материя" sticker */
 export const badgeDot = `${badgeBase} bg-t-neon font-dot text-[14px] tracking-normal text-t-black`;
 /* Title of the classic WordPress pages (Cart, Checkout, payment pages): Handjet 40, weight 500 */
 export const pageTitle = "mb-4 font-body text-[40px] font-medium leading-[1.2] tracking-normal text-[#333]";

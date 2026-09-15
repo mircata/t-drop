@@ -46,11 +46,11 @@ export default async function PaymentConfirmationPage({ searchParams }: { search
           {guest ? (
             <p className={text}>
               Направихме ти профил с имейла от плащането. В имейла има линк, с който избираш парола. После влизаш от{" "}
-              <Link href="/your-profile" className={link}>Your Profile</Link>.
+              <Link href="/register" className={link}>Your Profile</Link>.
             </p>
           ) : (
             <p className={text}>
-              Виж абонамента си в <Link href="/my-account" className={link}>My account</Link>.
+              Виж абонамента си в <Link href="/account" className={link}>My account</Link>.
             </p>
           )}
         </>

@@ -31,7 +31,7 @@ export function LostPasswordForm() {
         <button type="submit" disabled={pending} className={wooButton}>Изпрати</button>
       </p>
       <p className="mt-1 pb-[9px]">
-        <Link href="/your-profile" className={wooLink}>Обратно към влизане</Link>
+        <Link href="/register" className={wooLink}>Обратно към влизане</Link>
       </p>
     </form>
   );

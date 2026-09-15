@@ -3,24 +3,39 @@
 import { redirect } from "next/navigation";
 import { getCustomer } from "@/lib/auth";
 import { getPayloadClient } from "@/lib/payload";
+import { rateLimited } from "@/lib/rate-limit";
 import { getStripe, siteUrl, stripeEnabled } from "@/lib/stripe";
 
 const SIZES = new Set(["s", "m", "l", "xl"]);
 const GENDERS = new Set(["male", "female"]);
+const CARRIERS = new Set(["speedy", "sameday", "boxnow"]);
 
 /**
- * The "Поръчай" button on /join. Builds a Stripe Checkout Session in
- * subscription mode and sends the visitor to Stripe. Errors go back to /join
- * with a code in the query string.
+ * The "Поръчай" button on /join/delivery (the second step, after the gender/size/design
+ * picker on /join). Builds a Stripe Checkout Session in subscription mode and sends the
+ * visitor to Stripe. Errors go back to /join/delivery, with the picks preserved in the
+ * query string, or to /join itself if the picks were missing entirely (a tampered URL,
+ * since the normal flow never lets you reach /join/delivery without them).
  */
 export async function startCheckout(formData: FormData) {
   const size = String(formData.get("size") ?? "");
   const gender = String(formData.get("gender") ?? "");
   const categoryId = Number(formData.get("theme") ?? 0);
   const orderName = String(formData.get("order-name") ?? "").trim().slice(0, 120);
-
   if (!SIZES.has(size) || !GENDERS.has(gender) || !categoryId) redirect("/join?error=fields");
-  if (!stripeEnabled()) redirect("/join?error=payments-off");
+
+  const deliveryParams = `gender=${gender}&size=${size}&theme=${categoryId}`;
+  const recipientName = String(formData.get("recipientName") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const postcode = String(formData.get("postcode") ?? "").trim();
+  const carrier = String(formData.get("carrier") ?? "");
+  const addressOrOffice = String(formData.get("addressOrOffice") ?? "").trim();
+  if (!recipientName || !phone || !postcode || !CARRIERS.has(carrier) || !addressOrOffice) {
+    redirect(`/join/delivery?${deliveryParams}&error=delivery-fields`);
+  }
+
+  if (!stripeEnabled()) redirect(`/join/delivery?${deliveryParams}&error=payments-off`);
+  if (await rateLimited("checkout", 10, 10 * 60 * 1000)) redirect(`/join/delivery?${deliveryParams}&error=rate-limit`);
 
   const payload = await getPayloadClient();
   const [plans, category, customer] = await Promise.all([
@@ -29,7 +44,7 @@ export async function startCheckout(formData: FormData) {
     getCustomer(),
   ]);
   const plan = plans.docs[0];
-  if (!plan?.stripePriceId) redirect("/join?error=payments-off");
+  if (!plan?.stripePriceId) redirect(`/join/delivery?${deliveryParams}&error=payments-off`);
   if (!category?.active) redirect("/join?error=fields");
 
   const stripe = getStripe();
@@ -44,7 +59,18 @@ export async function startCheckout(formData: FormData) {
     await payload.update({ collection: "customers", id: customer.id, data: { stripeCustomerId } });
   }
 
-  const metadata = { size, gender, categoryId: String(categoryId), orderName, payloadCustomerId: customer ? String(customer.id) : "" };
+  const metadata = {
+    size,
+    gender,
+    categoryId: String(categoryId),
+    orderName,
+    payloadCustomerId: customer ? String(customer.id) : "",
+    recipientName,
+    phone,
+    postcode,
+    carrier,
+    addressOrOffice,
+  };
   let url: string | null = null;
   try {
     const session = await stripe.checkout.sessions.create({
@@ -55,8 +81,6 @@ export async function startCheckout(formData: FormData) {
       locale: "bg",
       customer: stripeCustomerId,
       client_reference_id: customer ? String(customer.id) : undefined,
-      shipping_address_collection: { allowed_countries: ["BG"] },
-      phone_number_collection: { enabled: true },
       allow_promotion_codes: true,
       metadata,
       subscription_data: { metadata },
@@ -65,6 +89,6 @@ export async function startCheckout(formData: FormData) {
   } catch (err) {
     payload.logger.error({ err }, "Stripe checkout session failed");
   }
-  if (!url) redirect("/join?error=stripe");
+  if (!url) redirect(`/join/delivery?${deliveryParams}&error=stripe`);
   redirect(url);
 }

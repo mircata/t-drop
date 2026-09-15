@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { login, type FormState } from "@/lib/actions/auth";
 import { ErrorNotice } from "./notice";
+import { OAuthButtons } from "./oauth-buttons";
 
 const field =
   "h-[48px] w-full rounded-[4px] border border-[#69727d] bg-white px-4 text-[24px] text-t-black outline-none focus:border-t-red";
 const label = "mb-0 block text-[24px] leading-[34px]";
 
 /* The Elementor login widget on /register. Markup matches the v0.1 port. */
-export function LoginFormElementor() {
+export function LoginFormElementor({ oauth }: { oauth: { google: boolean; facebook: boolean } }) {
   const [state, action, pending] = useActionState<FormState, FormData>(login, {});
   return (
     <form className="mt-[54px] flex flex-col gap-[25px] pb-10" action={action}>
@@ -38,6 +39,7 @@ export function LoginFormElementor() {
         <span className="px-0.5">|</span>
         <Link href="/your-profile/register" className="text-t-black hover:text-t-red">Register</Link>
       </div>
+      <OAuthButtons google={oauth.google} facebook={oauth.facebook} />
     </form>
   );
 }

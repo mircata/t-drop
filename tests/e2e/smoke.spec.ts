@@ -40,22 +40,31 @@ test("register, verify by token, log in, see the dashboard", async ({ page }) =>
   await page.getByLabel("Потребителско име или имейл адрес").fill(email);
   await page.getByLabel("Парола", { exact: false }).first().fill(password);
   await page.getByRole("button", { name: "Влизане" }).click();
-  await expect(page).toHaveURL(/\/my-account$/);
-  await expect(page.getByText("Здравейте, Smoke Тест")).toBeVisible();
-  await expect(page.getByText("Нямаш активен абонамент")).toBeVisible();
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(page.getByText("Абонамента ви е неактивен")).toBeVisible();
 });
 
 test("pick a drop theme and change it", async ({ page }) => {
-  await page.goto("/your-profile");
-  await page.getByLabel("Потребителско име или имейл адрес").fill(email);
-  await page.getByLabel("Парола", { exact: false }).first().fill(password);
-  await page.getByRole("button", { name: "Влизане" }).click();
-  await expect(page).toHaveURL(/\/my-account$/);
+  // The picker only shows for an active subscriber; the smoke customer never went through
+  // Stripe checkout, so give them a synthetic active subscription directly in the test DB.
+  await query(
+    `insert into subscriptions (customer_id, plan_id, status, provider, provider_subscription_id, created_at, updated_at)
+     select c.id, p.id, 'active', 'stripe', $2, now(), now()
+     from customers c, plans p where c.email = $1 limit 1`,
+    [email, `sub_smoke_${stamp}`],
+  );
 
-  const radios = page.locator('input[name="drop"]');
-  await expect(radios.first()).toBeVisible();
-  await radios.nth(1).check();
-  await page.getByRole("button", { name: "SUBMIT" }).click();
+  // /your-profile is retired and redirects to /register, the surviving login page.
+  await page.goto("/your-profile");
+  await page.getByLabel("Username or Email Address").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Влез" }).click();
+  await expect(page).toHaveURL(/\/account$/);
+
+  const cards = page.locator('input[name="drop"]');
+  await expect(cards.first()).toBeAttached();
+  await cards.nth(1).locator("..").click();
+  await page.getByRole("button", { name: "Избери" }).click();
   await expect(page).toHaveURL(/picked=ok/);
   await expect(page.getByText("Изборът ти е записан")).toBeVisible();
   await expect(page.locator('input[name="drop"]').nth(1)).toBeChecked();
@@ -66,8 +75,10 @@ test("pick a drop theme and change it", async ({ page }) => {
 
 test("logout protects the dashboard again", async ({ page }) => {
   await page.goto("/logout");
-  await page.goto("/my-account");
-  await expect(page).toHaveURL(/\/your-profile$/);
+  await page.goto("/account");
+  // /account redirects unauthenticated visitors to /your-profile, which itself
+  // redirects to /register (the surviving login page) — see next.config.ts.
+  await expect(page).toHaveURL(/\/register$/);
 });
 
 test("newsletter double opt-in", async ({ page }) => {

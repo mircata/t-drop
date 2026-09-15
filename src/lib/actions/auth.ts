@@ -1,8 +1,9 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { LockedAuth, UnverifiedEmail } from "payload";
-import { clearAuthCookie, getCustomer, setAuthCookie } from "@/lib/auth";
+import { getCustomer, setAuthCookie } from "@/lib/auth";
 import { getPayloadClient } from "@/lib/payload";
 import { rateLimited } from "@/lib/rate-limit";
 
@@ -34,7 +35,7 @@ export async function login(_prev: FormState, fd: FormData): Promise<FormState> 
   }
   if (!token) return { error: "Грешен имейл или парола." };
   await setAuthCookie(token, remember);
-  redirect("/my-account");
+  redirect("/account");
 }
 
 /** Registration form. Field names: name, email, password, password2. */
@@ -53,6 +54,7 @@ export async function register(_prev: FormState, fd: FormData): Promise<FormStat
   const existing = await payload.find({ collection: "customers", where: { email: { equals: email } }, limit: 1 });
   if (existing.totalDocs > 0) return { error: "Вече има профил с този имейл. Влез или поискай нова парола." };
 
+  // Email verification is off for now (Customers.ts auth.verify) — see the TODO there.
   await payload.create({ collection: "customers", data: { name, email, password } });
   return { ok: true };
 }
@@ -86,13 +88,13 @@ export async function resetPassword(_prev: FormState, fd: FormData): Promise<For
   } catch {
     return { error: "Линкът е изтекъл или вече е използван. Поискай нов." };
   }
-  redirect("/your-profile?reset=1");
+  redirect("/register?reset=1");
 }
 
-/** Profile form on /my-account/details. */
+/** Profile form on /account/details. */
 export async function updateProfile(_prev: FormState, fd: FormData): Promise<FormState> {
   const customer = await getCustomer();
-  if (!customer) redirect("/your-profile");
+  if (!customer) redirect("/register");
 
   const name = str(fd, "name");
   const email = str(fd, "email").toLowerCase();
@@ -111,14 +113,6 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
       data: {
         name,
         email,
-        phone: str(fd, "phone"),
-        address: {
-          line1: str(fd, "line1"),
-          line2: str(fd, "line2"),
-          city: str(fd, "city"),
-          postcode: str(fd, "postcode"),
-          country: str(fd, "country") || "BG",
-        },
         emailPreferences: {
           newsletter: fd.get("newsletter") === "on",
           dropReminder: fd.get("dropReminder") === "on",
@@ -129,10 +123,7 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
   } catch {
     return { error: "Промените не бяха записани. Провери дали имейлът не се използва от друг профил." };
   }
+  revalidatePath("/account/details");
   return { ok: true };
 }
 
-export async function logout() {
-  await clearAuthCookie();
-  redirect("/your-profile");
-}

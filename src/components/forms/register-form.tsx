@@ -4,16 +4,17 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { register, type FormState } from "@/lib/actions/auth";
 import { ErrorNotice } from "./notice";
+import { OAuthButtons } from "./oauth-buttons";
 import { wooBox, wooButton, wooInput, wooLabel, wooLink, wooRequired } from "./woo";
 
-export function RegisterForm() {
+export function RegisterForm({ oauth }: { oauth: { google: boolean; facebook: boolean } }) {
   const [state, action, pending] = useActionState<FormState, FormData>(register, {});
   if (state.ok) {
     return (
       <div className={wooBox}>
         <p className="py-2 font-roboto text-[14px] leading-[1.8] text-[#515151]">
-          Готово. Изпратихме ти имейл с линк за потвърждение. Отвори го и после влез от{" "}
-          <Link href="/your-profile" className={wooLink}>тук</Link>.
+          Готово, профилът е създаден. Влез от{" "}
+          <Link href="/register" className={wooLink}>тук</Link>.
         </p>
       </div>
     );
@@ -41,8 +42,9 @@ export function RegisterForm() {
         <button type="submit" disabled={pending} className={wooButton}>Регистрация</button>
       </p>
       <p className="mt-1 pb-[9px]">
-        <Link href="/your-profile" className={wooLink}>Вече имаш профил? Влез</Link>
+        <Link href="/register" className={wooLink}>Вече имаш профил? Влез</Link>
       </p>
+      <OAuthButtons google={oauth.google} facebook={oauth.facebook} />
     </form>
   );
 }

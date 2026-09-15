@@ -29,12 +29,19 @@ export const Site: GlobalConfig = {
               type: "text",
               label: "Лента най-горе (бягащ текст)",
               required: true,
+              admin: {
+                description:
+                  "Пиши {date} и {themes} където искаш да излязат истинската дата на следващата доставка и активните теми този месец — попълват се автоматично, не пиши датата/темите на ръка тук.",
+              },
             },
             {
-              name: "nextDropDate",
-              type: "date",
-              label: "Дата на следващия дроп",
-              admin: { date: { pickerAppearance: "dayOnly" } },
+              name: "deliveryDay",
+              type: "number",
+              label: "Ден от месеца, в който пристигат пратките",
+              min: 1,
+              max: 28,
+              defaultValue: 21,
+              admin: { description: "Напр. 21 = пратките пристигат на 21-во число всеки месец. Изборът на дизайн се заключва 3 седмици по-рано." },
             },
             { name: "nav", type: "array", label: "Меню", fields: linkFields },
           ],

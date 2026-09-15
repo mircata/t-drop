@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Dela_Gothic_One, Handjet, Roboto, DotGothic16 } from "next/font/google";
+import { Dela_Gothic_One, Handjet, Roboto } from "next/font/google";
 import "../globals.css";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
-import { getSite } from "@/lib/payload";
+import { getAnnouncementText, getSite } from "@/lib/payload";
 
 const headline = Dela_Gothic_One({
   weight: "400",
@@ -22,8 +22,8 @@ const roboto = Roboto({
   variable: "--font-roboto",
 });
 
-const dot = DotGothic16({
-  weight: "400",
+/* font-dot used to be DotGothic16; the brief now wants Handjet everywhere it appears. */
+const dot = Handjet({
   subsets: ["latin", "cyrillic"],
   variable: "--font-dot",
 });
@@ -38,14 +38,14 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const site = await getSite();
+  const [site, announcement] = await Promise.all([getSite(), getAnnouncementText()]);
   return (
     <html
       lang="bg"
       className={`${headline.variable} ${body.variable} ${roboto.variable} ${dot.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-body text-foreground bg-background">
-        <SiteHeader announcement={site.announcement} nav={(site.nav ?? []).map((n) => ({ href: n.href, label: n.label }))} />
+        <SiteHeader announcement={announcement} />
         <main className="flex-1">{children}</main>
         <SiteFooter site={site} />
       </body>

@@ -51,7 +51,7 @@ await upsertPage(payload, "home", {
       blockType: "hero",
       heading: "Всеки месец различни дизайни",
       subheading: "Само за 17.99EU на месец",
-      ctaLabel: "ВИЖ ТЕНИСКИТЕ",
+      ctaLabel: "ЗАПИШИ СЕ",
       ctaHref: "/join",
       shirt,
     },
@@ -152,7 +152,7 @@ await payload.updateGlobal({
   context: { disableRevalidate: true },
   data: {
     announcement:
-      "Очаквайте новият дроп 16 ФЕВ :: Темите този месец са Аниме, Кино, Фентъзи, Рок :: Регистрирай се сега! ::",
+      "Очаквайте новият дроп {date} :: Темите този месец са {themes} :: Регистрирай се сега! ::",
     nav: [
       { label: "About", href: "/about" },
       { label: "Your Profile", href: "/your-profile" },

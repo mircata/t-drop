@@ -32,16 +32,45 @@ Both pages are faithful ports of the WordPress site. `/register` is an Elementor
 
 The question for the owner in `tdrop-f1f.5`: keep both as they are, or fold them into one. Do not change the copy or remove a page without their answer. A reasonable proposal: `/register` becomes the sign-up form and `/your-profile` stays the login, since the nav labels already say "Register" and "Your Profile". That is a copy change and needs the owner's yes.
 
+## Idea, not urgent: clearer naming for Users vs Customers in /admin
+
+While testing locally (2026-09-14), the owner created a test account under "Users" in the /admin sidebar meaning to create a site login, then couldn't log in on the public site — `users` is the `/admin` login collection, `customers` is the site login, and the two labels don't make that distinction obvious to someone who didn't write the code. Worth a naming or admin-grouping pass at some point (e.g. clearer labels, grouping, or a sidebar description) so this mix-up doesn't repeat, especially once other people besides the owner get /admin access. Not launch-blocking.
+
+## Fixed: signed-in customer locked the owner out of /admin (2026-09-15)
+
+Payload names its auth cookie `${cookiePrefix}-token` with no per-collection distinction — every `auth: true` collection in one Payload instance shares the same browser cookie by default. With `users` (admin) and `customers` (site) both auth-enabled, being signed in to one silently signed you out of the other: the owner hit this after testing the account redesign, then opened `/admin` in the same browser and landed straight on "Unauthorized" without ever seeing a login form, because the browser still held a valid `customers` session under the cookie Payload's admin auth checks too.
+
+Fixed by giving each its own cookie: `payload.config.ts` sets `cookiePrefix: "tdrop-admin"` for Payload's own admin login (`tdrop-admin-token`), and `src/lib/auth.ts` now issues and reads a separate `tdrop-account-token` for customers, independent of Payload's cookie-name matching (the token is handed to `payload.auth()` via an `Authorization: JWT ...` header). Verified with Playwright: a customer and an admin can now be logged in in the same browser at once, each session working independently.
+
+## Fixed: design picks stayed locked through week 4 (2026-09-15)
+
+The owner clarified the real production cycle: week 1 — customers choose/change their design; weeks 2-3 — locked while production runs; week 4 — delivery happens and the next drop is announced, so choosing reopens (for the *next* delivery, since the one arriving that week is already final). `isDropLocked()` only implemented the week 1 → weeks 2-3 transition; it stayed locked straight through delivery day and only opened the day after, so week 4 was wrongly treated as locked.
+
+Fixed in `src/lib/stripe-sync.ts`: `isDropLocked()` now returns to open 6 days before delivery (`PICK_REOPEN_LEAD_DAYS`), and a new `pickTargetDate()` helper makes `dropMonth()` skip ahead to the following delivery once inside that week-4 window, so a pick made then doesn't wrongly attach to the delivery that's already final. Covered by `tests/unit/stripe-sync.test.ts` and verified live for both the locked and reopened states.
+
+~~Known gap, not addressed: the dashboard only surfaces one "current pick" at a time...~~ Addressed later the same day — see the account redesign entry below; the dashboard now has a "Преден дроп" strip for exactly this.
+
+## Account redesign complete (2026-09-15)
+
+All six `/account` pages rebuilt to the Figma redesign in one extended session (see `project_account_redesign` in the assistant's memory for the full detail — the design itself was revised more than once mid-project, so always re-check Figma before touching this area again rather than trusting old notes). Headline changes beyond styling: `CategorySelections` gained `size`/`gender` — a monthly pick is now design+size+gender chosen together, no separate "just change size" flow. `Customers.shipping` is a new, simpler courier-oriented address model (carrier + one combined address/office field), deliberately kept separate from the pre-existing Stripe-populated `Customers.address`. `/account/payment` embeds Stripe Elements directly (a real, deliberate exception to "never build card forms" — see the Stripe setup section) instead of redirecting to the Portal.
+
+## Google/Facebook login + delivery tracking (2026-09-15)
+
+Two more owner requests, both self-contained — see "Google/Facebook login for customers" and "Delivery tracking" in CLAUDE.md for the details. OAuth needs the owner to create apps in Google Cloud Console and Meta for Developers and paste in four env vars before either button appears (they're hidden per-provider until configured, verified working). Delivery tracking needed one new field (`fulfillmentStatus`) and one new staff-only page (`/admin-tools/deliveries`, linked from the /admin sidebar) — no new collection, reusing `CategorySelections` as the single source of truth for what a customer gets each month.
+
 ## Payment review: what to look at
 
-The code is small: `src/lib/actions/checkout.ts`, `src/app/(site)/webhooks/stripe/route.ts`, `src/lib/stripe-sync.ts`, `src/app/(site)/my-account/portal/route.ts`, `src/app/(site)/payment-confirmation/page.tsx`. Known state and known gaps:
+The code is small: `src/lib/actions/checkout.ts`, `src/app/(site)/webhooks/stripe/route.ts`, `src/lib/stripe-sync.ts`, `src/app/(account)/account/portal/route.ts`, `src/app/(site)/payment-confirmation/page.tsx`. Known state and known gaps:
 
 - Tested in the sandbox: full checkout, renewal via test clock, a card that fails on first charge, cancel at period end and immediate cancel, events arriving out of order or two at once. Fixtures from those runs are in `tests/unit/fixtures/sandbox/`.
-- Not tested: a card declined at hosted Checkout (no webhook fires), refunds, disputes, a price change on the plan, a customer with two subscriptions, Stripe retries after a 500 on the real endpoint, the Customer Portal UI itself.
+- Not tested: a card declined at hosted Checkout (no webhook fires), disputes, a price change on the plan, a customer with two subscriptions, Stripe retries after a 500 on the real endpoint, the Customer Portal UI itself.
 - The webhook endpoint in Stripe was registered on `https://t-drop-t-drop.vercel.app`, but the public alias is `https://t-drop.vercel.app`. Re-register on the final host (the custom domain once it exists) and put the new signing secret in Vercel. Until then production receives no webhooks.
-- `/payment-confirmation` re-syncs the session from Stripe on load, so a buyer sees the right page even before the webhook lands. Check what happens when the same session is synced twice from the page and the webhook.
+- `/payment-confirmation` re-syncs the session from Stripe on load, so a buyer sees the right page even before the webhook lands. The race between that sync and the webhook's own sync is now handled: `upsertSubscription` catches the concurrent-create case and converges on whichever row won, instead of surfacing "unknown" to a buyer who did pay.
 - The Stripe account is a sandbox. Two live accounts exist from the old site; the owner has not chosen one. Do not touch live mode.
-- Read the code with the Stripe API version in mind: the SDK pins 2026-08-26, where `current_period_end` sits on subscription items and invoices point at subscriptions via `parent.subscription_details`.
+- Read the code with the Stripe API version in mind: the SDK pins 2026-08-26, where `current_period_end` sits on subscription items, invoices point at subscriptions via `parent.subscription_details`, and a `Charge` has no direct `invoice` field — to find the invoice behind a charge, go through `stripe.invoicePayments.list({ payment: { type: "payment_intent", payment_intent } })`, as `markPaymentRefunded` in `stripe-sync.ts` does.
+- Refunds are now tracked: a `charge.refunded` handler sets a payment row to `"refunded"` (see `markPaymentRefunded`). `charge.refunded` needs adding to the webhook endpoint's event list in the Stripe dashboard (already documented in `CLAUDE.md`'s setup steps) before this fires in production.
+- Disputes are still untracked — deliberately deferred, not an oversight. Before building it: does a disputed charge need a new `Payments.status` value (`"disputed"`)? Should it pause or flag the subscription? Should it notify the owner? That's a product decision, not just plumbing — ask the owner before implementing.
+- The checkout server action (`startCheckout`) now goes through `rateLimited()` like every other public form (10 attempts / 10 min per IP), matching the security rule in `CLAUDE.md`.
 
 ## Database review: what to look at
 
@@ -49,9 +78,10 @@ The code is small: `src/lib/actions/checkout.ts`, `src/app/(site)/webhooks/strip
 - Supabase: Data API and GraphQL are meant to be off. The probe from this Mac cannot confirm it without the publishable key; ask the owner to check Project Settings > Data API, or check with the key. Payload's tables have no row-level security, so this matters.
 - Connections: runtime uses the transaction pooler (port 6543, pool of 3 per instance), migrations the session pooler (port 5432). The direct host is IPv6-only. Explained in `CLAUDE.md` under Deploy.
 - Backups: Supabase's plan determines point-in-time recovery. Nobody has checked what the project has. Find out and write it down.
-- PII: customers hold name, email, phone, address; payments hold a trimmed invoice; nothing holds card data. Check the Stripe `raw` field on payments stays trimmed.
+- PII: customers hold name, email, phone, address; payments hold a trimmed invoice; nothing holds card data. Checked: the Stripe `raw` field on payments stays trimmed (no card data, only invoice summary fields) — confirmed by reading `upsertPayment` in `stripe-sync.ts`.
 - Test rows: the production database has only seed content. The local `tdrop` and `tdrop_test` databases hold throwaway accounts.
 - Media files carry a `-1` suffix in the bucket because the local folder had the originals at seed time. Cosmetic.
+- **Open decision, deliberately held:** deleting a customer, plan, or category that has any related subscriptions/payments/category-selections currently throws a raw, unhandled Postgres error instead of failing gracefully. Confirmed by actually creating a customer with a subscription and deleting them locally. Cause: every relationship back to `customers`/`plans`/`categories` from `subscriptions`, `payments`, and `category-selections` is `required: true` in the collection config, but Payload generates the foreign key as `ON DELETE SET NULL` — those two are contradictory, so Postgres's `NOT NULL` constraint fires. This blocks the launch checklist's "delete test rows before the live account switch" step for any customer who completed a checkout. Needs an owner decision before fixing: block deletion with a friendly message when history exists (retains payment records, likely wanted for accounting), or cascade-delete the related rows. Leaning toward block, not decided.
 
 ## Tests: what exists and what is missing
 
@@ -67,11 +97,11 @@ The current `README.md` is a first draft for the owner. `tdrop-f1f.4` rewrites i
 
 - Stripe webhook on the final host, secret into Vercel.
 - t-drop.net pointed at Vercel; `NEXT_PUBLIC_SERVER_URL` updated to it.
-- First `/admin` user created by the owner.
+- First `/admin` user created by the owner, with a fresh unique password. Never run `npm run seed:admin` against the production database — it creates `admin@t-drop.local` / `tdrop-local-admin`, fixed credentials that are readable in this repo's `CLAUDE.md`.
 - `RESEND_API_KEY` set; until then production sends no emails, which breaks sign-up verification and password reset.
 - Vercel project Node.js version set to 22 to silence the package.json warning.
 - Delete test rows before the live account switch.
-- A nonce-based Content-Security-Policy; `/logout` and `/my-account/portal` as POST.
+- A nonce-based Content-Security-Policy; `/logout` and `/account/portal` as POST.
 - Confirm Data API off.
 
 ## Working agreements that still apply

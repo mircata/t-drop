@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
+  async redirects() {
+    // /your-profile itself is retired (superseded by /register as the one login
+    // page); its sub-pages (/your-profile/register, /lost-password, /reset-password,
+    // /verify) are unaffected — those links were already emailed out.
+    return [{ source: "/your-profile", destination: "/register", permanent: true }];
+  },
 };
 
 export default withPayload(nextConfig);
