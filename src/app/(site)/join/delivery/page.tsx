@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { DeliveryForm } from "@/components/forms/delivery-form";
 import { headline36 } from "@/components/site/shared";
+import { getCustomer } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Доставка – T-Drop Monthly T-Shirts" };
 
@@ -13,6 +14,10 @@ const ERRORS: Record<string, string> = {
   "payments-off": "Плащанията още не са включени. Опитай по-късно.",
   stripe: "Плащането не можа да започне. Опитай пак след малко.",
   "rate-limit": "Твърде много опити. Опитай пак след малко.",
+  "email-invalid": "Въведи валиден имейл.",
+  "password-short": "Паролата трябва да е поне 8 знака.",
+  "password-mismatch": "Двете пароли не съвпадат.",
+  "email-taken": "Вече има профил с този имейл. Влез от /register и опитай пак.",
 };
 
 /* Step 2 of /join, reached from the design/size/gender picker's "Избери" button
@@ -26,12 +31,13 @@ export default async function JoinDeliveryPage({ searchParams }: { searchParams:
   if (!GENDERS.has(gender) || !SIZES.has(size) || !theme) redirect("/join");
 
   const error = typeof params.error === "string" ? ERRORS[params.error] : undefined;
+  const customer = await getCustomer();
 
   return (
     <section className="site-container flex flex-col items-center pt-10 max-md:px-5">
       <h1 className={headline36}>Доставка</h1>
       <p className="mb-10 mt-2 text-center">Последна стъпка преди плащането — къде да пратим тениската.</p>
-      <DeliveryForm gender={gender} size={size} theme={theme} errorMessage={error} />
+      <DeliveryForm gender={gender} size={size} theme={theme} errorMessage={error} loggedInEmail={customer?.email} />
     </section>
   );
 }

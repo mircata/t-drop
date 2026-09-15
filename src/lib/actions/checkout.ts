@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getCustomer } from "@/lib/auth";
+import { getCustomer, setAuthCookie } from "@/lib/auth";
 import { getPayloadClient } from "@/lib/payload";
 import { rateLimited } from "@/lib/rate-limit";
 import { getStripe, siteUrl, stripeEnabled } from "@/lib/stripe";
@@ -9,13 +9,19 @@ import { getStripe, siteUrl, stripeEnabled } from "@/lib/stripe";
 const SIZES = new Set(["s", "m", "l", "xl"]);
 const GENDERS = new Set(["male", "female"]);
 const CARRIERS = new Set(["speedy", "sameday", "boxnow"]);
+const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
 /**
  * The "Поръчай" button on /join/delivery (the second step, after the gender/size/design
- * picker on /join). Builds a Stripe Checkout Session in subscription mode and sends the
- * visitor to Stripe. Errors go back to /join/delivery, with the picks preserved in the
- * query string, or to /join itself if the picks were missing entirely (a tampered URL,
- * since the normal flow never lets you reach /join/delivery without them).
+ * picker on /join). For a signed-out visitor this also creates their account and logs
+ * them in, right here, before Stripe — email/password/password2 fields, same rules as
+ * /register — instead of relying on the webhook's guest-checkout fallback (resolveCustomer
+ * in stripe-sync.ts), which emails a "choose your password" link that only works if
+ * RESEND_API_KEY is configured. Builds a Stripe Checkout Session in subscription mode and
+ * sends the visitor to Stripe, with the new account's email attached to the Stripe Customer
+ * so Checkout shows it pre-filled. Errors go back to /join/delivery, with the picks
+ * preserved in the query string, or to /join itself if the picks were missing entirely (a
+ * tampered URL, since the normal flow never lets you reach /join/delivery without them).
  */
 export async function startCheckout(formData: FormData) {
   const size = String(formData.get("size") ?? "");
@@ -38,18 +44,35 @@ export async function startCheckout(formData: FormData) {
   if (await rateLimited("checkout", 10, 10 * 60 * 1000)) redirect(`/join/delivery?${deliveryParams}&error=rate-limit`);
 
   const payload = await getPayloadClient();
-  const [plans, category, customer] = await Promise.all([
+  let customer = await getCustomer();
+
+  if (!customer) {
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    const password = String(formData.get("password") ?? "");
+    const password2 = String(formData.get("password2") ?? "");
+    if (!isEmail(email)) redirect(`/join/delivery?${deliveryParams}&error=email-invalid`);
+    if (password.length < 8) redirect(`/join/delivery?${deliveryParams}&error=password-short`);
+    if (password !== password2) redirect(`/join/delivery?${deliveryParams}&error=password-mismatch`);
+
+    const existing = await payload.find({ collection: "customers", where: { email: { equals: email } }, limit: 1 });
+    if (existing.totalDocs > 0) redirect(`/join/delivery?${deliveryParams}&error=email-taken`);
+
+    customer = await payload.create({ collection: "customers", data: { name: recipientName, email, password } });
+    const { token } = await payload.login({ collection: "customers", data: { email, password } });
+    if (token) await setAuthCookie(token, false);
+  }
+
+  const [plans, category] = await Promise.all([
     payload.find({ collection: "plans", where: { active: { equals: true } }, sort: "sortOrder", limit: 1 }),
     payload.findByID({ collection: "categories", id: categoryId }).catch(() => null),
-    getCustomer(),
   ]);
   const plan = plans.docs[0];
   if (!plan?.stripePriceId) redirect(`/join/delivery?${deliveryParams}&error=payments-off`);
   if (!category?.active) redirect("/join?error=fields");
 
   const stripe = getStripe();
-  let stripeCustomerId = customer?.stripeCustomerId ?? undefined;
-  if (customer && !stripeCustomerId) {
+  let stripeCustomerId = customer.stripeCustomerId ?? undefined;
+  if (!stripeCustomerId) {
     const created = await stripe.customers.create({
       email: customer.email,
       name: customer.name,
@@ -64,7 +87,7 @@ export async function startCheckout(formData: FormData) {
     gender,
     categoryId: String(categoryId),
     orderName,
-    payloadCustomerId: customer ? String(customer.id) : "",
+    payloadCustomerId: String(customer.id),
     recipientName,
     phone,
     postcode,
@@ -80,7 +103,7 @@ export async function startCheckout(formData: FormData) {
       cancel_url: `${siteUrl()}/payment-failed`,
       locale: "bg",
       customer: stripeCustomerId,
-      client_reference_id: customer ? String(customer.id) : undefined,
+      client_reference_id: String(customer.id),
       allow_promotion_codes: true,
       metadata,
       subscription_data: { metadata },

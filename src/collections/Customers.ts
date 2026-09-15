@@ -45,7 +45,11 @@ export const Customers: CollectionConfig = {
     // (src/lib/actions/auth.ts) and RegisterForm. Turned off 2026-09-16 at the owner's
     // request so registration doesn't depend on outbound email while that's still being
     // set up (RESEND_API_KEY). /your-profile/verify still works if re-enabled — it was
-    // left in place, only this switch changed.
+    // left in place, only this switch changed. The account created inline in startCheckout
+    // (src/lib/actions/checkout.ts, added 2026-09-16 for the same reason — RESEND_API_KEY
+    // wasn't set on the test Vercel deploy, so the webhook's "choose your password" email
+    // never arrived) goes through the same payload.create and needs no separate change:
+    // flipping this back on covers both signup paths.
     verify: false,
     // verify: {
     //   generateEmailSubject: () => "Потвърди имейла си за T-Drop",
