@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { LockedAuth, UnverifiedEmail } from "payload";
-import { getCustomer, setAuthCookie } from "@/lib/auth";
+import { clearAuthCookie, getCustomer, setAuthCookie } from "@/lib/auth";
 import { getPayloadClient } from "@/lib/payload";
 import { rateLimited } from "@/lib/rate-limit";
 
@@ -36,6 +36,18 @@ export async function login(_prev: FormState, fd: FormData): Promise<FormState> 
   if (!token) return { error: "Грешен имейл или парола." };
   await setAuthCookie(token, remember);
   redirect("/account");
+}
+
+/**
+ * Signs the customer out. A Server Action bound to a form's submit (POST), not a bare
+ * GET link — an earlier `<Link href="/logout">` to a GET route handler (real bug, hit
+ * and fixed 2026-09-16) got silently triggered by Next.js's automatic link prefetching
+ * just from being rendered in AccountTabs, logging visitors out before they clicked
+ * anything. GET requests must stay side-effect-free for exactly this reason.
+ */
+export async function logout(): Promise<void> {
+  await clearAuthCookie();
+  redirect("/register");
 }
 
 /** Registration form. Field names: name, email, password, password2. */

@@ -33,3 +33,8 @@ export async function setAuthCookie(token: string, remember: boolean) {
     ...(remember ? { maxAge: THIRTY_DAYS } : {}),
   });
 }
+
+export async function clearAuthCookie() {
+  const store = await cookies();
+  store.set({ name: AUTH_COOKIE, value: "", path: "/", maxAge: 0 });
+}
