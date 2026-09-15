@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { adminOrOwnCustomer, isAdmin } from "../lib/access";
+import { FULFILLMENT_STATUSES } from "../lib/delivery-status";
 
 /**
  * A customer's pick for one month. Unique per customer and month, so a change
@@ -11,7 +12,7 @@ export const CategorySelections: CollectionConfig = {
   access: { read: adminOrOwnCustomer, create: isAdmin, update: isAdmin, delete: isAdmin },
   admin: {
     useAsTitle: "month",
-    defaultColumns: ["month", "customer", "category", "updatedAt"],
+    defaultColumns: ["month", "customer", "category", "fulfillmentStatus", "updatedAt"],
     group: "Дропове",
     listSearchableFields: ["month"],
   },
@@ -27,5 +28,28 @@ export const CategorySelections: CollectionConfig = {
       validate: (v: unknown) => (typeof v === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(v)) || "Формат ГГГГ-ММ, напр. 2026-03",
     },
     { name: "category", type: "relationship", relationTo: "categories", label: "Тема", required: true },
+    {
+      name: "size",
+      type: "select",
+      label: "Размер",
+      options: ["s", "m", "l", "xl"].map((v) => ({ label: v.toUpperCase(), value: v })),
+    },
+    {
+      name: "gender",
+      type: "select",
+      label: "Пол",
+      options: [
+        { label: "Мъж", value: "male" },
+        { label: "Жена", value: "female" },
+      ],
+    },
+    {
+      name: "fulfillmentStatus",
+      type: "select",
+      label: "Статус на доставка",
+      defaultValue: "preparing",
+      index: true,
+      options: FULFILLMENT_STATUSES.map((s) => ({ label: s.label, value: s.value })),
+    },
   ],
 };

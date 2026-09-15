@@ -40,16 +40,23 @@ export const Customers: CollectionConfig = {
       sameSite: "Lax",
       secure: process.env.NODE_ENV === "production",
     },
-    verify: {
-      generateEmailSubject: () => "Потвърди имейла си за T-Drop",
-      generateEmailHTML: ({ token }) =>
-        emailShell(
-          "Добре дошъл в T-Drop",
-          "Остава една стъпка: потвърди имейла си, за да можеш да влезеш в профила си.",
-          `${siteUrl()}/your-profile/verify?token=${token}`,
-          "Потвърди имейла",
-        ),
-    },
+    // TODO before going to production: turn email verification back on (verify: {...}
+    // below, unchanged) and revert the "no verification needed" copy in register()
+    // (src/lib/actions/auth.ts) and RegisterForm. Turned off 2026-09-16 at the owner's
+    // request so registration doesn't depend on outbound email while that's still being
+    // set up (RESEND_API_KEY). /your-profile/verify still works if re-enabled — it was
+    // left in place, only this switch changed.
+    verify: false,
+    // verify: {
+    //   generateEmailSubject: () => "Потвърди имейла си за T-Drop",
+    //   generateEmailHTML: ({ token }) =>
+    //     emailShell(
+    //       "Добре дошъл в T-Drop",
+    //       "Остава една стъпка: потвърди имейла си, за да можеш да влезеш в профила си.",
+    //       `${siteUrl()}/your-profile/verify?token=${token}`,
+    //       "Потвърди имейла",
+    //     ),
+    // },
     forgotPassword: {
       generateEmailSubject: () => "Нова парола за T-Drop",
       generateEmailHTML: (args) =>
@@ -82,13 +89,35 @@ export const Customers: CollectionConfig = {
     {
       name: "address",
       type: "group",
-      label: "Адрес за доставка",
+      label: "Адрес от Stripe",
+      admin: { description: "Попълва се автоматично от Stripe при плащане. Не се показва на клиента — виж \"Доставка\" по-долу за адреса, който клиентът въвежда сам." },
       fields: [
         { name: "line1", type: "text", label: "Улица и номер" },
         { name: "line2", type: "text", label: "Допълнение" },
         { name: "city", type: "text", label: "Град" },
         { name: "postcode", type: "text", label: "Пощенски код" },
         { name: "country", type: "text", label: "Държава", defaultValue: "BG" },
+      ],
+    },
+    {
+      name: "shipping",
+      type: "group",
+      label: "Доставка",
+      admin: { description: "Показва се и се редактира на /account/address." },
+      fields: [
+        { name: "recipientName", type: "text", label: "Име на получателя" },
+        { name: "postcode", type: "text", label: "Пощенски код" },
+        {
+          name: "carrier",
+          type: "select",
+          label: "Спедитор",
+          options: [
+            { label: "Speedy", value: "speedy" },
+            { label: "Sameday", value: "sameday" },
+            { label: "BoxNow", value: "boxnow" },
+          ],
+        },
+        { name: "addressOrOffice", type: "text", label: "Точен адрес за доставка / офис на куриер" },
       ],
     },
     {

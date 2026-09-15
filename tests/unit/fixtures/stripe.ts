@@ -59,6 +59,19 @@ export function invoice(over: Partial<Record<string, unknown>> = {}): Stripe.Inv
   } as unknown as Stripe.Invoice;
 }
 
+export function charge(over: Partial<Record<string, unknown>> = {}): Stripe.Charge {
+  return {
+    id: "ch_test_001",
+    object: "charge",
+    customer: "cus_test_001",
+    payment_intent: "pi_test_001",
+    amount: 1799,
+    amount_refunded: 1799,
+    refunded: true,
+    ...over,
+  } as unknown as Stripe.Charge;
+}
+
 export function event(type: string, object: unknown, id = `evt_${type}_${Math.random().toString(36).slice(2, 8)}`): Stripe.Event {
   return { id, object: "event", type, api_version: "2026-08-26.dahlia", created: now, livemode: false, data: { object } } as unknown as Stripe.Event;
 }

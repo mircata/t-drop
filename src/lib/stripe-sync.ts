@@ -25,14 +25,45 @@ const STATUS: Record<string, SubStatus> = {
 const id = (v: string | { id: string } | null | undefined) => (typeof v === "string" ? v : v?.id ?? null);
 const iso = (secs: number | null | undefined) => (secs ? new Date(secs * 1000).toISOString() : null);
 
-/** True once the announced drop date has passed; picks for that drop are closed. */
-export function isDropLocked(nextDropDate?: string | null): boolean {
-  return Boolean(nextDropDate && new Date(nextDropDate).getTime() <= Date.now());
+const DEFAULT_DELIVERY_DAY = 21;
+
+/*
+ * The production cycle is 4 weeks, counted back from the delivery date:
+ *   week 1 (days 21-27 out): choosing is open, for the upcoming delivery.
+ *   weeks 2-3 (days 7-20 out): locked, production is running.
+ *   week 4 (days 0-6 out, delivery day included): delivery happens and the
+ *     next drop is announced — choosing reopens, but for the delivery AFTER
+ *     the one arriving this week, since that one is already final.
+ */
+/** Design picks lock this many days before delivery — the start of weeks 2-3. */
+export const PICK_LOCK_LEAD_DAYS = 21;
+/** Picks reopen this many days before delivery — the start of week 4. */
+export const PICK_REOPEN_LEAD_DAYS = 6;
+
+/** The next occurrence of the site's delivery day (this month if it has not passed yet, else next month). */
+export function nextDeliveryDate(deliveryDay?: number | null, from: Date = new Date()): Date {
+  const day = deliveryDay && deliveryDay >= 1 && deliveryDay <= 28 ? deliveryDay : DEFAULT_DELIVERY_DAY;
+  const year = from.getUTCFullYear();
+  const month = from.getUTCMonth();
+  return from.getUTCDate() <= day ? new Date(Date.UTC(year, month, day)) : new Date(Date.UTC(year, month + 1, day));
 }
 
-/** "YYYY-MM" for the drop a new subscriber is choosing for: the announced drop date, else this month. */
-export function dropMonth(nextDropDate?: string | null): string {
-  const d = nextDropDate ? new Date(nextDropDate) : new Date();
+/** True during weeks 2-3: locked from 3 weeks before delivery until a week before it. Open in week 1 and week 4 (delivery week). */
+export function isDropLocked(deliveryDay?: number | null, from: Date = new Date()): boolean {
+  const daysUntil = (nextDeliveryDate(deliveryDay, from).getTime() - from.getTime()) / 86400000;
+  return daysUntil > PICK_REOPEN_LEAD_DAYS && daysUntil <= PICK_LOCK_LEAD_DAYS;
+}
+
+/** The delivery a pick made right now is for: the next one, except in week 4 (its own delivery week) when it is already final and a pick is for the delivery after it. */
+function pickTargetDate(deliveryDay: number | null | undefined, from: Date): Date {
+  const next = nextDeliveryDate(deliveryDay, from);
+  const daysUntil = (next.getTime() - from.getTime()) / 86400000;
+  return daysUntil > PICK_REOPEN_LEAD_DAYS ? next : nextDeliveryDate(deliveryDay, new Date(next.getTime() + 86400000));
+}
+
+/** "YYYY-MM" for the drop a customer is currently choosing for (see pickTargetDate). */
+export function dropMonth(deliveryDay?: number | null, from: Date = new Date()): string {
+  const d = pickTargetDate(deliveryDay, from);
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
@@ -47,6 +78,7 @@ type Identity = {
   name?: string | null;
   phone?: string | null;
   address?: Customer["address"];
+  shipping?: Customer["shipping"];
   payloadCustomerId?: string | null;
 };
 
@@ -83,10 +115,10 @@ async function resolveCustomer(payload: Payload, who: Identity): Promise<Custome
           name: who.name || email,
           email,
           password: randomBytes(24).toString("base64url"),
-          _verified: true,
           stripeCustomerId: who.stripeCustomerId ?? undefined,
           address: who.address ?? undefined,
           phone: who.phone ?? undefined,
+          shipping: who.shipping ?? undefined,
         },
       });
       await sendWelcomeEmail(payload, customer);
@@ -104,6 +136,7 @@ async function resolveCustomer(payload: Payload, who: Identity): Promise<Custome
   if (who.stripeCustomerId && !customer.stripeCustomerId) patch.stripeCustomerId = who.stripeCustomerId;
   if (who.address?.line1 && !customer.address?.line1) patch.address = who.address;
   if (who.phone && !customer.phone) patch.phone = who.phone;
+  if (who.shipping?.recipientName && !customer.shipping?.recipientName) patch.shipping = who.shipping;
   if (Object.keys(patch).length > 0) {
     customer = await payload.update({ collection: "customers", id: customer.id, data: patch });
   }
@@ -129,14 +162,20 @@ async function customerFromStripeId(payload: Payload, stripeCustomerId: string):
 
 /** The customer a Checkout Session belongs to. */
 export async function customerFromSession(payload: Payload, session: Stripe.Checkout.Session): Promise<Customer> {
-  const shipping = session.collected_information?.shipping_details?.address;
+  const shippingAddress = session.collected_information?.shipping_details?.address;
+  const m = session.metadata ?? {};
   return resolveCustomer(payload, {
     stripeCustomerId: id(session.customer),
     email: session.customer_details?.email,
     name: session.customer_details?.name,
-    phone: session.customer_details?.phone,
-    address: shipping
-      ? { line1: shipping.line1 ?? "", line2: shipping.line2 ?? "", city: shipping.city ?? "", postcode: shipping.postal_code ?? "", country: shipping.country ?? "BG" }
+    // Checkout no longer collects phone/address itself — /join/delivery does, ahead of
+    // checkout, so this comes from the session metadata startCheckout put there.
+    phone: session.customer_details?.phone || m.phone,
+    address: shippingAddress
+      ? { line1: shippingAddress.line1 ?? "", line2: shippingAddress.line2 ?? "", city: shippingAddress.city ?? "", postcode: shippingAddress.postal_code ?? "", country: shippingAddress.country ?? "BG" }
+      : undefined,
+    shipping: m.recipientName
+      ? { recipientName: m.recipientName, postcode: m.postcode, carrier: m.carrier as "speedy" | "sameday" | "boxnow" | undefined, addressOrOffice: m.addressOrOffice }
       : undefined,
     payloadCustomerId: session.client_reference_id || session.metadata?.payloadCustomerId,
   });
@@ -271,6 +310,27 @@ export async function upsertPayment(payload: Payload, invoice: Stripe.Invoice, o
   return payload.create({ collection: "payments", data });
 }
 
+/**
+ * Mark the payment behind a refunded charge as refunded. This API version has no direct
+ * charge -> invoice link; go through invoicePayments via the charge's payment_intent.
+ * No-op if the charge is not attached to an invoice we recorded (e.g. a one-off charge).
+ */
+export async function markPaymentRefunded(payload: Payload, charge: Stripe.Charge) {
+  const paymentIntentId = id(charge.payment_intent);
+  if (!paymentIntentId) return;
+  const invoicePayments = await getStripe().invoicePayments.list({
+    payment: { type: "payment_intent", payment_intent: paymentIntentId },
+    limit: 1,
+  });
+  const invoiceId = id(invoicePayments.data[0]?.invoice);
+  if (!invoiceId) return;
+
+  const existing = await payload.find({ collection: "payments", where: { providerPaymentId: { equals: invoiceId } }, limit: 1 });
+  const row = existing.docs[0];
+  if (!row) return;
+  await payload.update({ collection: "payments", id: row.id, data: { status: "refunded" } });
+}
+
 /** Record the theme a new subscriber picked at checkout for the coming drop. Does not overwrite a pick made later. */
 export async function recordCheckoutPick(payload: Payload, customerId: number, categoryId: number | null, month: string) {
   if (!categoryId) return;
@@ -298,7 +358,7 @@ export async function syncCheckoutSession(payload: Payload, session: Stripe.Chec
   });
 
   const site = await payload.findGlobal({ slug: "site", depth: 0 });
-  await recordCheckoutPick(payload, customer.id, m.categoryId ? Number(m.categoryId) : null, dropMonth(site.nextDropDate));
+  await recordCheckoutPick(payload, customer.id, m.categoryId ? Number(m.categoryId) : null, dropMonth(site.deliveryDay));
   return customer;
 }
 
@@ -321,6 +381,9 @@ export async function handleStripeEvent(payload: Payload, event: Stripe.Event) {
       return;
     case "invoice.payment_failed":
       await upsertPayment(payload, event.data.object, { failed: true });
+      return;
+    case "charge.refunded":
+      await markPaymentRefunded(payload, event.data.object);
       return;
     default:
       return;

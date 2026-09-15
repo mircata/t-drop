@@ -62,7 +62,15 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      afterNavLinks: ["@/components/admin-tools/deliveries-nav-link#DeliveriesNavLink"],
+    },
   },
+  // Payload's own login (used only by /admin, for the `users` collection) sets a
+  // cookie named `${cookiePrefix}-token`. Customers never touch this cookie — see
+  // AUTH_COOKIE in src/lib/auth.ts — so an admin and a customer can be signed in
+  // in the same browser at once instead of overwriting each other's session.
+  cookiePrefix: "tdrop-admin",
   graphQL: { disable: true },
   collections: [Users, Customers, Media, Pages, Plans, Subscriptions, Payments, Categories, CategorySelections, WebhookEvents, Subscribers],
   globals: [Site],

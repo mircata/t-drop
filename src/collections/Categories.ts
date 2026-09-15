@@ -13,6 +13,7 @@ export const Categories: CollectionConfig = {
     useAsTitle: "name",
     defaultColumns: ["name", "active", "sortOrder"],
     group: "Дропове",
+    description: "Всеки месец качи новите 4 дизайна тук и тикни \"Предлага се този месец\" на точно тях — /join и /account ги показват веднага. Изключи миналомесечните, не ги трий (старите избори сочат към тях).",
   },
   fields: [
     { name: "name", type: "text", label: "Име", required: true },

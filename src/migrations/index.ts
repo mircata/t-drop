@@ -5,6 +5,10 @@ import * as migration_20260912_031702_subscriptions from './20260912_031702_subs
 import * as migration_20260912_032229_stripe from './20260912_032229_stripe';
 import * as migration_20260912_032654_newsletter from './20260912_032654_newsletter';
 import * as migration_20260913_052405_payments_subscription_link from './20260913_052405_payments_subscription_link';
+import * as migration_20260915_003600_delivery_day from './20260915_003600_delivery_day';
+import * as migration_20260915_150000_category_selection_size_gender from './20260915_150000_category_selection_size_gender';
+import * as migration_20260915_151500_customer_shipping from './20260915_151500_customer_shipping';
+import * as migration_20260915_160000_fulfillment_status from './20260915_160000_fulfillment_status';
 
 export const migrations = [
   {
@@ -41,5 +45,25 @@ export const migrations = [
     up: migration_20260913_052405_payments_subscription_link.up,
     down: migration_20260913_052405_payments_subscription_link.down,
     name: '20260913_052405_payments_subscription_link'
+  },
+  {
+    up: migration_20260915_003600_delivery_day.up,
+    down: migration_20260915_003600_delivery_day.down,
+    name: '20260915_003600_delivery_day'
+  },
+  {
+    up: migration_20260915_150000_category_selection_size_gender.up,
+    down: migration_20260915_150000_category_selection_size_gender.down,
+    name: '20260915_150000_category_selection_size_gender'
+  },
+  {
+    up: migration_20260915_151500_customer_shipping.up,
+    down: migration_20260915_151500_customer_shipping.down,
+    name: '20260915_151500_customer_shipping'
+  },
+  {
+    up: migration_20260915_160000_fulfillment_status.up,
+    down: migration_20260915_160000_fulfillment_status.down,
+    name: '20260915_160000_fulfillment_status'
   },
 ];

@@ -51,10 +51,9 @@ describe("recorded sandbox lifecycle", () => {
     expect(decline.status).toBe("canceled");
     const declinePays = (await payload.find({ collection: "payments", where: { subscription: { equals: decline.id } }, depth: 0 })).docs;
     expect(declinePays.map((p) => p.status)).toEqual(["failed"]);
-    // One customer per Stripe customer, all verified.
+    // One customer per Stripe customer.
     const customers = (await payload.find({ collection: "customers", limit: 20 })).docs;
     expect(new Set(customers.map((c) => c.stripeCustomerId)).size).toBe(customers.length);
-    expect(customers.every((c) => c._verified)).toBe(true);
   });
 
   it("survives subscription.created and invoice.paid arriving at the same moment", async () => {

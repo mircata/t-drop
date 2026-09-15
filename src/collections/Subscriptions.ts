@@ -3,7 +3,7 @@ import { adminOrOwnCustomer, isAdmin } from "../lib/access";
 
 /**
  * One row per subscription at the payment provider. Written by the Stripe
- * webhook, read by /my-account. Admins may edit for manual fixes.
+ * webhook, read by /account. Admins may edit for manual fixes.
  */
 export const Subscriptions: CollectionConfig = {
   slug: "subscriptions",

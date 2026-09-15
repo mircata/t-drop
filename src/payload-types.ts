@@ -192,12 +192,24 @@ export interface Customer {
   id: number;
   name: string;
   phone?: string | null;
+  /**
+   * Попълва се автоматично от Stripe при плащане. Не се показва на клиента — виж "Доставка" по-долу за адреса, който клиентът въвежда сам.
+   */
   address?: {
     line1?: string | null;
     line2?: string | null;
     city?: string | null;
     postcode?: string | null;
     country?: string | null;
+  };
+  /**
+   * Показва се и се редактира на /account/address.
+   */
+  shipping?: {
+    recipientName?: string | null;
+    postcode?: string | null;
+    carrier?: ('speedy' | 'sameday' | 'boxnow') | null;
+    addressOrOffice?: string | null;
   };
   emailPreferences?: {
     newsletter?: boolean | null;
@@ -211,8 +223,6 @@ export interface Customer {
   resetPasswordExpiration?: string | null;
   salt?: string | null;
   hash?: string | null;
-  _verified?: boolean | null;
-  _verificationToken?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
   sessions?:
@@ -449,6 +459,8 @@ export interface Payment {
   createdAt: string;
 }
 /**
+ * Всеки месец качи новите 4 дизайна тук и тикни "Предлага се този месец" на точно тях — /join и /account ги показват веднага. Изключи миналомесечните, не ги трий (старите избори сочат към тях).
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories".
  */
@@ -470,6 +482,9 @@ export interface CategorySelection {
   customer: number | Customer;
   month: string;
   category: number | Category;
+  size?: ('s' | 'm' | 'l' | 'xl') | null;
+  gender?: ('male' | 'female') | null;
+  fulfillmentStatus?: ('pending_payment' | 'preparing' | 'on_hold' | 'delivered' | 'cancelled') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -660,6 +675,14 @@ export interface CustomersSelect<T extends boolean = true> {
         postcode?: T;
         country?: T;
       };
+  shipping?:
+    | T
+    | {
+        recipientName?: T;
+        postcode?: T;
+        carrier?: T;
+        addressOrOffice?: T;
+      };
   emailPreferences?:
     | T
     | {
@@ -674,8 +697,6 @@ export interface CustomersSelect<T extends boolean = true> {
   resetPasswordExpiration?: T;
   salt?: T;
   hash?: T;
-  _verified?: T;
-  _verificationToken?: T;
   loginAttempts?: T;
   lockUntil?: T;
   sessions?:
@@ -907,6 +928,9 @@ export interface CategorySelectionsSelect<T extends boolean = true> {
   customer?: T;
   month?: T;
   category?: T;
+  size?: T;
+  gender?: T;
+  fulfillmentStatus?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -980,8 +1004,14 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface Site {
   id: number;
+  /**
+   * Пиши {date} и {themes} където искаш да излязат истинската дата на следващата доставка и активните теми този месец — попълват се автоматично, не пиши датата/темите на ръка тук.
+   */
   announcement: string;
-  nextDropDate?: string | null;
+  /**
+   * Напр. 21 = пратките пристигат на 21-во число всеки месец. Изборът на дизайн се заключва 3 седмици по-рано.
+   */
+  deliveryDay?: number | null;
   nav?:
     | {
         label: string;
@@ -1019,7 +1049,7 @@ export interface Site {
  */
 export interface SiteSelect<T extends boolean = true> {
   announcement?: T;
-  nextDropDate?: T;
+  deliveryDay?: T;
   nav?:
     | T
     | {

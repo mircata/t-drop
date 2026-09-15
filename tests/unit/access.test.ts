@@ -21,13 +21,39 @@ beforeAll(async () => {
 beforeEach(async () => {
   await resetDatabase(payload);
   const { plan } = await seedPlanAndCategory(payload);
-  alice = await payload.create({ collection: "customers", data: { name: "Alice", email: "alice@example.com", password: "password-1234", _verified: true, stripeCustomerId: "cus_alice" } });
-  bob = await payload.create({ collection: "customers", data: { name: "Bob", email: "bob@example.com", password: "password-1234", _verified: true } });
+  alice = await payload.create({ collection: "customers", data: { name: "Alice", email: "alice@example.com", password: "password-1234", stripeCustomerId: "cus_alice" } });
+  bob = await payload.create({ collection: "customers", data: { name: "Bob", email: "bob@example.com", password: "password-1234" } });
   await payload.create({ collection: "subscriptions", data: { customer: alice.id, plan: plan.id, status: "active", provider: "stripe", providerSubscriptionId: "sub_alice" } });
   await payload.create({ collection: "subscriptions", data: { customer: bob.id, plan: plan.id, status: "active", provider: "stripe", providerSubscriptionId: "sub_bob" } });
   await payload.create({ collection: "payments", data: { customer: alice.id, provider: "stripe", providerPaymentId: "in_alice", amountCents: 1799, currency: "eur", status: "paid" } });
   await payload.create({ collection: "pages", data: { title: "Home", slug: "home", layout: [] } });
   await payload.create({ collection: "users", data: { email: "admin@example.com", password: "admin-pass-1234" } });
+});
+
+describe("media", () => {
+  it("anyone reads, only an admin writes", async () => {
+    await expect(payload.create({ collection: "media", data: { alt: "x" }, ...asUser() })).rejects.toThrow();
+    await expect(payload.create({ collection: "media", data: { alt: "x" }, ...asUser(alice) })).rejects.toThrow();
+  });
+});
+
+describe("category-selections", () => {
+  it("a customer sees only their own pick; another customer and anonymous see nothing", async () => {
+    const { category } = await seedPlanAndCategory(payload);
+    const pick = await payload.create({ collection: "category-selections", data: { customer: alice.id, month: "2026-03", category: category.id } });
+
+    const mine = await payload.find({ collection: "category-selections", ...asUser(alice) });
+    expect(mine.docs.map((d) => d.id)).toEqual([pick.id]);
+    await expect(payload.find({ collection: "category-selections", ...asUser(bob) })).resolves.toMatchObject({ totalDocs: 0 });
+    await expect(payload.find({ collection: "category-selections", ...asUser() })).rejects.toThrow();
+  });
+
+  it("a customer cannot write their own pick directly", async () => {
+    const { category } = await seedPlanAndCategory(payload);
+    await expect(
+      payload.create({ collection: "category-selections", data: { customer: alice.id, month: "2026-03", category: category.id }, ...asUser(alice) }),
+    ).rejects.toThrow();
+  });
 });
 
 describe("anonymous", () => {
