@@ -16,7 +16,7 @@ const SIZES = ["s", "m", "l", "xl"];
 const pill = "flex h-[46px] flex-1 items-center justify-center rounded-[14px] font-headline text-[14px] uppercase tracking-[1.12px]";
 const pillOn = "bg-t-red text-white";
 const pillOff = "bg-[#d9d9d9] text-[#686868]";
-const fieldLabel = "mb-[15px] font-headline text-[18px] uppercase tracking-[1.44px] text-[#686868]";
+const fieldLabel = "mb-[30px] font-headline text-[18px] uppercase tracking-[1.44px] text-[#686868]";
 
 function InfoIcon({ className }: { className?: string }) {
   return (
@@ -50,7 +50,7 @@ export function DropPicker({
   const [gender, setGender] = useState<string | null>(defaultGender);
 
   return (
-    <form id="drop" action={pickCategory} className="flex flex-col gap-[30px] rounded-[20px] border-3 border-dashed border-black p-5">
+    <form id="drop" action={pickCategory} className="flex flex-col gap-[30px] rounded-[20px] border-3 border-dashed border-black px-5 py-10">
       {locked && (
         <p className="text-[16px] text-t-red">
           Остават по-малко от 3 седмици до доставката — изборът за следващия дроп е затворен до отваряне на новия прозорец.
@@ -79,25 +79,25 @@ export function DropPicker({
 
       <div>
         <p className={fieldLabel}>Размер</p>
-        <div className={`flex flex-wrap items-center gap-[15px] ${locked ? "opacity-40" : ""}`}>
+        <div className={`flex items-center gap-[15px] max-md:flex-wrap ${locked ? "opacity-40" : ""}`}>
           {SIZES.map((s) => (
             <label key={s} className={`${pill} min-w-[80px] ${locked ? "cursor-not-allowed" : "cursor-pointer"} ${size === s ? pillOn : pillOff}`}>
               <input type="radio" name="size" value={s} checked={size === s} onChange={() => setSize(s)} disabled={locked} className="sr-only" />
               {s.toUpperCase()}
             </label>
           ))}
-          <Link href="/join" className="flex items-center gap-[12px] font-body text-[14px] text-t-black underline">
+          <Link href="/join" className="flex shrink-0 items-center gap-[12px] font-body text-[14px] text-t-black underline">
             <InfoIcon className="size-[18px] shrink-0 text-t-black" />
             Виж размерите
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-5 max-md:grid-cols-2">
+      <div className="grid grid-cols-4 gap-[40px] max-lg:gap-5 max-md:grid-cols-2">
         {categories.map((c) => (
           <label
             key={c.id}
-            className={`flex flex-col items-center gap-[15px] rounded-[29px] pb-[15px] ${locked ? "cursor-not-allowed opacity-40" : "cursor-pointer"} ${
+            className={`flex flex-col items-center gap-[35px] rounded-[29px] pb-[26px] max-md:gap-[15px] max-md:pb-[15px] ${locked ? "cursor-not-allowed opacity-40" : "cursor-pointer"} ${
               c.id === selected ? "border-4 border-t-red bg-t-red text-white" : "text-[#4e4e4e]"
             }`}
           >
@@ -110,7 +110,7 @@ export function DropPicker({
               disabled={locked}
               className="sr-only"
             />
-            <span className="relative block aspect-square w-full overflow-hidden rounded-[29px]">
+            <span className="relative block aspect-[277/297] w-full overflow-hidden rounded-[29px]">
               <Image src={c.image} alt={c.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
             </span>
             <span className="font-headline text-[18px] uppercase tracking-[1.44px]">{c.name}</span>
@@ -118,7 +118,7 @@ export function DropPicker({
         ))}
       </div>
 
-      <button type="submit" disabled={locked} className="mx-auto block rounded-[50px] bg-t-red px-10 py-[15px] font-headline text-[21px] uppercase tracking-[0.84px] text-t-cream disabled:cursor-not-allowed disabled:opacity-50">
+      <button type="submit" disabled={locked} className="block h-[71px] w-full rounded-[50px] bg-t-red font-headline text-[21px] uppercase tracking-[0.84px] text-t-cream disabled:cursor-not-allowed disabled:opacity-50">
         Избери
       </button>
     </form>

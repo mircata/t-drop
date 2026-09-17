@@ -6,6 +6,7 @@ import { DropPicker } from "@/components/forms/drop-picker";
 import { AccountTabs } from "@/components/site/account-tabs";
 import { SubscriptionStatusBar } from "@/components/site/subscription-status-bar";
 import { getCustomer } from "@/lib/auth";
+import { FULFILLMENT_STATUS_LABELS } from "@/lib/delivery-status";
 import { getPayloadClient, mediaUrl } from "@/lib/payload";
 import { stripeEnabled } from "@/lib/stripe";
 import { dropMonth, isDropLocked, nextDeliveryDate } from "@/lib/stripe-sync";
@@ -52,8 +53,13 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const showPicker = choose === "1" || !pickedCategory;
   const daysLeft = daysUntil(nextDeliveryDate(site.deliveryDay));
   const lastSub = subs.docs[0];
-  const defaultSize = pick?.size ?? lastSub?.size ?? null;
-  const defaultGender = pick?.gender ?? lastSub?.gender ?? null;
+  // The picker starts on the customer's own previous choice (this month's pick, then
+  // last delivered pick, then the checkout defaults), per the design's annotation.
+  const defaultSize = pick?.size ?? previousPick?.size ?? lastSub?.size ?? null;
+  const defaultGender = pick?.gender ?? previousPick?.gender ?? lastSub?.gender ?? null;
+  const sectionLabel = "font-headline text-[18px] uppercase leading-[1.12] tracking-[1.44px] text-[#686868]";
+  const bigName = "font-headline text-[72px] uppercase leading-[1.12] text-t-red max-md:text-[40px]";
+  const pickName = "font-headline text-[48px] uppercase leading-[1.12] text-t-red whitespace-nowrap max-md:whitespace-normal max-md:text-[36px]";
 
   return (
     <section className="site-container pt-[45px] pb-[60px] max-md:px-5">
@@ -64,71 +70,86 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
       {hasActive && previousCategory && (
         <div className="mt-[30px]">
-          <p className="mb-[15px] font-headline text-[18px] uppercase tracking-[1.44px] text-[#686868]">Преден дроп</p>
-          <div className="flex flex-wrap items-center gap-[20px] rounded-[20px] border-3 border-dashed border-black bg-[#fffdea] px-5 py-[20px] max-md:flex-col max-md:items-start">
+          <p className={`mb-[15px] ${sectionLabel}`}>Преден дроп</p>
+          <div className="flex min-h-[115px] items-center justify-between gap-[20px] rounded-[20px] border-3 border-dashed border-black bg-[#fffdea] px-5 py-[16px] max-md:flex-col max-md:items-start">
             <div className="relative h-[84px] w-[87px] shrink-0 overflow-hidden rounded-[10px] bg-t-grey">
               {typeof previousCategory.image === "object" && previousCategory.image?.url && (
                 <Image src={previousCategory.image.url} alt={previousCategory.name} fill sizes="87px" className="object-cover" />
               )}
             </div>
-            <div className="font-headline uppercase">
+            <div className="flex w-[212px] flex-col gap-[5px] font-headline uppercase leading-[1.12] max-md:w-auto">
               <p className="text-[12px] tracking-[0.96px] text-black opacity-40">Избрана категория</p>
               <p className="text-[18px] tracking-[1.44px] text-black">{previousCategory.name}</p>
             </div>
-            <div className="font-headline uppercase">
+            <div className="flex w-[182px] flex-col gap-[5px] font-headline uppercase leading-[1.12] max-md:w-auto">
               <p className="text-[12px] tracking-[0.96px] text-black opacity-40">Месец</p>
               <p className="text-[18px] tracking-[1.44px] text-black">{monthName(previousPick.month)}</p>
             </div>
-            <div className="font-headline uppercase">
+            <div className="flex w-[182px] flex-col gap-[5px] font-headline uppercase leading-[1.12] max-md:w-auto">
               <p className="text-[12px] tracking-[0.96px] text-black opacity-40">Статус</p>
-              <p className="text-[18px] tracking-[1.44px] text-black">Доставено</p>
+              <p className="text-[18px] tracking-[1.44px] text-black">{FULFILLMENT_STATUS_LABELS[previousPick.fulfillmentStatus ?? ""] ?? "Доставено"}</p>
             </div>
+            {/* Empty slot the design keeps at the right end, so the three columns sit left of centre. */}
+            <div className="w-[268px] max-lg:hidden" aria-hidden="true" />
           </div>
         </div>
       )}
 
       {!hasActive && (
-        <div className="mt-[30px] flex flex-col items-center gap-[10px] rounded-[20px] border-3 border-dashed border-black bg-[#fffdea] px-5 py-10 text-center">
+        <div className="mt-[41px] flex min-h-[400px] flex-col items-center justify-center gap-[10px] rounded-[20px] border-3 border-dashed border-black bg-[#fffdea] px-5 py-10 text-center max-md:min-h-0">
           <p className="font-body text-[32px] uppercase text-t-black">Абонамента ви е неактивен</p>
-          <p className="text-[16px] text-t-black">
+          <p className="max-w-[1008px] text-[16px] text-t-black">
             Моля проверете метода на плащане или се свържете с нас директно за повече информация:{" "}
-            <a href="mailto:office@t-drop.net" className="underline">office@t-drop.net</a>. Или{" "}
-            <Link href="/join" className="underline">запиши се</Link> за нов абонамент.
+            <a href="mailto:office@t-drop.net" className="underline">office@t-drop.net</a>
           </p>
         </div>
       )}
 
       {hasActive && !showPicker && pickedCategory && (
-        <div className="mt-[30px]">
-          <p className="mb-[15px] font-headline text-[18px] uppercase tracking-[1.44px] text-[#686868]">Предстоящ дроп</p>
-          <div className="flex gap-10 max-md:flex-col">
-            <div className="relative aspect-[593/566] w-[45%] shrink-0 overflow-hidden rounded-[29px] bg-t-grey max-md:w-full">
+        <div className={previousCategory ? "mt-[56px] max-md:mt-10" : "mt-[30px]"}>
+          <p className={`mb-[23px] ${sectionLabel}`}>Предстоящ дроп</p>
+          {/* Two layouts from the design: while the pick can still change, a larger image
+              and a narrow column with a "Промени" link under size and under gender; once
+              locked, a smaller image and a wider column with size and gender on one row. */}
+          <div className={`flex max-md:flex-col ${locked ? "gap-[71px] max-lg:gap-10" : "gap-[42px]"}`}>
+            <div
+              className={`relative shrink-0 overflow-hidden rounded-[29px] bg-t-grey max-md:w-full ${
+                locked ? "aspect-[499/477] w-[39%]" : "aspect-[593/566] w-[46%]"
+              }`}
+            >
               {typeof pickedCategory.image === "object" && pickedCategory.image?.url && (
-                <Image src={pickedCategory.image.url} alt={pickedCategory.name} fill sizes="(max-width: 768px) 100vw, 45vw" className="object-cover" />
+                <Image src={pickedCategory.image.url} alt={pickedCategory.name} fill sizes="(max-width: 768px) 100vw, 46vw" className="object-cover" />
               )}
             </div>
-            <div className="flex flex-1 flex-col gap-[20px]">
+            <div className="flex min-w-0 flex-1 flex-col gap-[30px]">
               <div>
-                <p className="font-headline text-[18px] uppercase tracking-[1.44px] text-[#686868]">Избрана категория</p>
-                <p className="font-headline text-[48px] uppercase leading-[1.12] text-t-red max-md:text-[36px]">{pickedCategory.name}</p>
+                <p className={sectionLabel}>Избрана категория</p>
+                <p className={pickName}>{pickedCategory.name}</p>
                 {!locked && (
-                  <Link href="/account?choose=1" className="underline">Избери друг дизайн</Link>
+                  <Link href="/account?choose=1" className="font-body text-[16px] text-t-black underline">Избери друг дизайн</Link>
                 )}
               </div>
-              <div className="flex flex-wrap gap-x-10 gap-y-[15px]">
-                {pick?.size && (
-                  <div>
-                    <p className="font-headline text-[18px] uppercase tracking-[1.44px] text-[#686868]">Размер: {SIZE_LABELS[pick.size]}</p>
-                    {!locked && <Link href="/account?choose=1" className="underline">Промени</Link>}
-                  </div>
-                )}
-                {pick?.gender && (
-                  <div>
-                    <p className="font-headline text-[18px] uppercase tracking-[1.44px] text-[#686868]">Пол: {GENDER_LABELS[pick.gender]}</p>
-                    {!locked && <Link href="/account?choose=1" className="underline">Промени</Link>}
-                  </div>
-                )}
-              </div>
+              {locked ? (
+                <div className="flex gap-5">
+                  {pick?.size && <p className={`flex-1 ${sectionLabel}`}>Размер: {SIZE_LABELS[pick.size]}</p>}
+                  {pick?.gender && <p className={`flex-1 ${sectionLabel}`}>Пол: {GENDER_LABELS[pick.gender]}</p>}
+                </div>
+              ) : (
+                <>
+                  {pick?.size && (
+                    <div className="flex flex-col items-start gap-[15px]">
+                      <p className={sectionLabel}>Размер: {SIZE_LABELS[pick.size]}</p>
+                      <Link href="/account?choose=1" className="font-body text-[16px] text-t-black underline">Промени</Link>
+                    </div>
+                  )}
+                  {pick?.gender && (
+                    <div className="flex flex-col items-start gap-[15px]">
+                      <p className={sectionLabel}>Пол: {GENDER_LABELS[pick.gender]}</p>
+                      <Link href="/account?choose=1" className="font-body text-[16px] text-t-black underline">Промени</Link>
+                    </div>
+                  )}
+                </>
+              )}
               <div className="text-[16px] text-t-black">
                 <p>1 t-shirt</p>
                 <p>free delivery</p>
@@ -136,7 +157,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 <p>Monthly Tee Picker</p>
                 <p>Designed, printed and delivered in Bulgaria</p>
               </div>
-              <div className="flex flex-col items-center gap-[10px] rounded-[20px] border-3 border-dashed border-black p-5 text-center">
+              <div className={`flex flex-col items-center justify-center gap-[10px] rounded-[20px] border-3 border-dashed border-black p-5 text-center ${locked ? "min-h-[152px]" : "min-h-[91px] max-w-[494px]"}`}>
                 <p className="text-[16px] text-t-black">Оставащи дни до пратка</p>
                 <p className="font-body text-[32px] uppercase text-t-black">{daysLeft} дни</p>
               </div>
@@ -146,26 +167,26 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       )}
 
       {hasActive && showPicker && (
-        <div className="mt-[30px] flex flex-col gap-[30px]">
-          {picked === "missing" && <p className="text-t-red">Избери една от темите.</p>}
-          {picked === "locked" && <p className="text-t-red">Остават по-малко от 3 седмици до доставката — изборът за този дроп е затворен.</p>}
-          {picked === "ok" && <p className="text-[#1faa3d]">Изборът ти е записан.</p>}
+        <div className={`flex flex-col gap-[40px] ${previousCategory ? "mt-[56px] max-md:mt-10" : "mt-[30px]"}`}>
           <div>
-            <p className="font-headline text-[18px] uppercase tracking-[1.44px] text-[#686868]">
-              {pickedCategory ? "Избери следващ дроп" : "Не сте избрали дизайн за следващия дроп"}
-            </p>
-            <p className="font-headline text-[48px] uppercase leading-[1.12] text-t-red max-md:text-[32px]">Изберете от тук</p>
+            {picked === "missing" && <p className="mb-[15px] text-t-red">Избери една от темите.</p>}
+            {picked === "locked" && <p className="mb-[15px] text-t-red">Остават по-малко от 3 седмици до доставката — изборът за този дроп е затворен.</p>}
+            {picked === "ok" && <p className="mb-[15px] text-[#1faa3d]">Изборът ти е записан.</p>}
+            <p className={sectionLabel}>Избери предстоящ дроп</p>
+            <p className={`mt-[10px] ${bigName}`}>Изберете от тук</p>
+            <div className="mt-[33px]">
+              <DropPicker
+                categories={categories.docs.map((c) => ({ id: c.id, name: c.name, image: mediaUrl(c.image, "") }))}
+                pickedId={pickedCategory?.id ?? null}
+                locked={locked}
+                defaultSize={defaultSize}
+                defaultGender={defaultGender}
+              />
+            </div>
           </div>
-          <DropPicker
-            categories={categories.docs.map((c) => ({ id: c.id, name: c.name, image: mediaUrl(c.image, "") }))}
-            pickedId={pickedCategory?.id ?? null}
-            locked={locked}
-            defaultSize={defaultSize}
-            defaultGender={defaultGender}
-          />
-          <div className="flex flex-col items-center gap-[10px] rounded-[20px] border-3 border-dashed border-black bg-[#fffdea] p-5 text-center">
+          <div className="flex flex-col items-center gap-[10px] rounded-[20px] border-3 border-dashed border-black bg-[#fffdea] px-5 py-10 text-center">
             <p className="font-body text-[32px] uppercase text-t-black">Срок за избор на дизайн</p>
-            <p className="text-[16px] text-t-black">Можете да изберете дизайн най-късно 3 седмици преди датата на доставка. В случай че не изберете модел ще ви доставим дизайн по наш избор.</p>
+            <p className="max-w-[1008px] text-[16px] text-t-black">Можете да изберете дизайн най-късно 3 седмици преди датата на доставка. В случай че не изберете модел ще ви доставим дизайн по наш избор.</p>
           </div>
         </div>
       )}
