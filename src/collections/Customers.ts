@@ -1,9 +1,10 @@
 import type { Access, CollectionConfig, FieldAccess } from "payload";
+import { blockDeleteIfReferenced } from "../lib/delete-guards";
 
 /**
  * Site customers: people who subscribe. Separate from `users`, which is the
  * /admin login. Customers register on the site, confirm their email, and log in
- * at /your-profile or /register. Admins see and edit them in /admin.
+ * at /login (/your-profile redirects there too). Admins see and edit them in /admin.
  */
 
 const siteUrl = () => process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
@@ -87,6 +88,15 @@ export const Customers: CollectionConfig = {
     defaultColumns: ["email", "name", "createdAt"],
     group: "Клиенти",
   },
+  hooks: {
+    beforeDelete: [
+      blockDeleteIfReferenced([
+        { collection: "subscriptions", field: "customer", label: "Абонаменти" },
+        { collection: "payments", field: "customer", label: "Плащания" },
+        { collection: "category-selections", field: "customer", label: "Избори за дроп" },
+      ]),
+    ],
+  },
   fields: [
     { name: "name", type: "text", label: "Име", required: true },
     { name: "phone", type: "text", label: "Телефон" },
@@ -110,6 +120,10 @@ export const Customers: CollectionConfig = {
       admin: { description: "Показва се и се редактира на /account/address." },
       fields: [
         { name: "recipientName", type: "text", label: "Име на получателя" },
+        /* city added 2026-09-16 with the /join/delivery redesign, which asks for "Град".
+           postcode stayed on the owner's call — the courier labels and the factory CSV both
+           use it, so the form collects both. */
+        { name: "city", type: "text", label: "Град" },
         { name: "postcode", type: "text", label: "Пощенски код" },
         {
           name: "carrier",

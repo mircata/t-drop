@@ -13,8 +13,8 @@ The v0.3 epic is `tdrop-f1f`. Its six tasks are the whole scope of the next sess
 1. `tdrop-f1f.1` broaden the tests
 2. `tdrop-f1f.2` review payment handling end to end
 3. `tdrop-f1f.3` review the database model, access rules and operations
-4. `tdrop-f1f.4` write the root README for the owner
-5. `tdrop-f1f.5` decide what to do with the two login pages
+4. `tdrop-f1f.4` write the root README for the owner — **done 2026-09-16**
+5. `tdrop-f1f.5` decide what to do with the two login pages — **done 2026-09-15**, see "The two logins" below
 6. `tdrop-f1f.6` launch checklist
 
 Work them in the order 2, 3, 1, 4, 5, 6. The reviews may change code that the tests and README then have to describe.
@@ -22,15 +22,17 @@ Work them in the order 2, 3, 1, 4, 5, 6. The reviews may change code that the te
 ## What the owner asked, in their words
 
 - Write tests and make sure we are ready for a production deploy.
-- The pages `/your-profile` and `/register` are two separate logins. Is that how the site came from WordPress? (Yes. See "The two logins" below.)
+- The pages `/your-profile` and `/register` (now `/login`, see below) are two separate logins. Is that how the site came from WordPress? (Yes. See "The two logins" below.)
 - Review payment information and the databases carefully.
 - A README in the repo root that explains the stack, how to work with the CMS, how to create admin accounts, and so on.
 
-## The two logins
+## The two logins — resolved 2026-09-15
 
-Both pages are faithful ports of the WordPress site. `/register` is an Elementor "login widget" page titled "Акаунт": username, password, "Влез", with a "Register" link that on WordPress led to... `/your-profile`, which is the WooCommerce My Account page, whose logged-out state is also a login form. So the old site had two login forms and no real sign-up page; WooCommerce created accounts at checkout. v0.2 kept both forms (copy rule: Bulgarian text stays as ported), wired both to the same server action, added `/your-profile/register` for sign-up, and let checkout create accounts for guests.
+Both pages were faithful ports of the WordPress site. `/register` is an Elementor "login widget" page titled "Акаунт": username, password, "Влез", with a "Register" link that on WordPress led to... `/your-profile`, which is the WooCommerce My Account page, whose logged-out state is also a login form. So the old site had two login forms and no real sign-up page; WooCommerce created accounts at checkout. v0.2 kept both forms (copy rule: Bulgarian text stays as ported), wired both to the same server action, added `/your-profile/register` for sign-up, and let checkout create accounts for guests.
 
-The question for the owner in `tdrop-f1f.5`: keep both as they are, or fold them into one. Do not change the copy or remove a page without their answer. A reasonable proposal: `/register` becomes the sign-up form and `/your-profile` stays the login, since the nav labels already say "Register" and "Your Profile". That is a copy change and needs the owner's yes.
+`tdrop-f1f.5` asked the owner to pick: keep both, or fold into one. Resolved in commit `77017ce` (2026-09-15, "Redesign the header, retire /your-profile for /register, and rebuild /join"): `/register` became the one surviving login page, and `/your-profile` permanently redirects to it (`next.config.ts`). Its sub-pages (`/your-profile/register`, `/lost-password`, `/reset-password`, `/verify`) were left in place since those links were already emailed out. `CLAUDE.md`'s account-routes line was updated 2026-09-16 to match — it had still described `/your-profile` as a login form after this shipped.
+
+**Renamed `/register` to `/login` (2026-09-16):** the owner flagged that `/register` was a confusing slug for a page that's purely a login form (sign-up lives at `/your-profile/register`). Renamed the route to `/login` and added a permanent redirect from `/register` (`next.config.ts`) in case anything has it bookmarked. Updated every internal `redirect("/register")` / `Link href="/register"` call site (account pages, auth actions, OAuth routes, the email-verify page, logout, the checkout guest-signup error copy) plus `CLAUDE.md` and the e2e smoke test.
 
 ## Idea, not urgent: clearer naming for Users vs Customers in /admin
 
@@ -81,7 +83,7 @@ The code is small: `src/lib/actions/checkout.ts`, `src/app/(site)/webhooks/strip
 - PII: customers hold name, email, phone, address; payments hold a trimmed invoice; nothing holds card data. Checked: the Stripe `raw` field on payments stays trimmed (no card data, only invoice summary fields) — confirmed by reading `upsertPayment` in `stripe-sync.ts`.
 - Test rows: the production database has only seed content. The local `tdrop` and `tdrop_test` databases hold throwaway accounts.
 - Media files carry a `-1` suffix in the bucket because the local folder had the originals at seed time. Cosmetic.
-- **Open decision, deliberately held:** deleting a customer, plan, or category that has any related subscriptions/payments/category-selections currently throws a raw, unhandled Postgres error instead of failing gracefully. Confirmed by actually creating a customer with a subscription and deleting them locally. Cause: every relationship back to `customers`/`plans`/`categories` from `subscriptions`, `payments`, and `category-selections` is `required: true` in the collection config, but Payload generates the foreign key as `ON DELETE SET NULL` — those two are contradictory, so Postgres's `NOT NULL` constraint fires. This blocks the launch checklist's "delete test rows before the live account switch" step for any customer who completed a checkout. Needs an owner decision before fixing: block deletion with a friendly message when history exists (retains payment records, likely wanted for accounting), or cascade-delete the related rows. Leaning toward block, not decided.
+- **Fixed 2026-09-16:** deleting a customer, plan, or category that has any related subscriptions/payments/category-selections used to throw a raw, unhandled Postgres error instead of failing gracefully (every relationship back to `customers`/`plans`/`categories` is `required: true`, but Payload generates the foreign key as `ON DELETE SET NULL` — contradictory, so Postgres's `NOT NULL` constraint fired). The owner chose to block rather than cascade, to keep payment/order history intact for accounting. `src/lib/delete-guards.ts` has a `blockDeleteIfReferenced` helper wired into each collection's `beforeDelete` hook (`Customers.ts`, `Plans.ts`, `Categories.ts`); it now refuses the delete with a friendly Bulgarian message naming what's still attached, instead of a raw error. Covered by `tests/unit/delete-guards.test.ts`. The launch checklist's "delete test rows before the live account switch" step now needs test rows' subscriptions/payments/picks removed first (or those customers left in place), rather than hitting a crash.
 
 ## Tests: what exists and what is missing
 
@@ -89,9 +91,9 @@ Existing: `tests/unit/stripe-sync.test.ts`, `tests/unit/stripe-sandbox.test.ts`,
 
 Missing: the checkout action (needs a Stripe stub), the portal redirect, profile edit, password reset in the browser, the rate limiter, the revalidation hooks, phone-width rendering of the account pages, anything on the deployed site itself. A production smoke that hits the live URL after each deploy would catch the pooler class of failure that took the site down on the first deploy.
 
-## README
+## README — done 2026-09-16
 
-The current `README.md` is a first draft for the owner. `tdrop-f1f.4` rewrites it to cover: the stack in plain words, running locally, editing in `/admin`, creating admin accounts (open `/admin` on a fresh database and it asks; afterwards Users in the admin), the monthly shipping list, keys and where they live, deploy, beads. Keep `CLAUDE.md` as the file for agents and the README as the file for the owner. Apply the `unslop` skill before writing prose.
+`README.md` was rewritten to cover: the stack in plain words, running locally, editing in `/admin` (including the Users-vs-Клиенти naming trap flagged earlier in this doc), creating admin accounts (the first-user signup Payload shows on an empty database, then Users in the admin for every one after), the monthly shipping list (now `/admin-tools/deliveries`, added after the original README draft), signing in (`/login`, after the rename above), money, keys, deploy, and beads. `CLAUDE.md` stays the file for agents, the README the file for the owner. (The `unslop` skill named in the original task isn't available in this environment — the rewrite just followed the existing README's plain, direct voice by hand.)
 
 ## Launch checklist (tdrop-f1f.6)
 
@@ -103,6 +105,25 @@ The current `README.md` is a first draft for the owner. `tdrop-f1f.4` rewrites i
 - Delete test rows before the live account switch.
 - A nonce-based Content-Security-Policy; `/logout` and `/account/portal` as POST.
 - Confirm Data API off.
+
+## Security backlog (2026-09-16, undecided — owner to pick what to use)
+
+From a security review pass after the payment/database/README work above. Not prioritized against each other; two items overlap with the launch checklist above (marked below) rather than duplicating it.
+
+- **`/admin` (Users collection) has no login lockout.** `Customers.ts` sets `maxLoginAttempts: 5, lockTime: 10min`; `Users.ts` has none, so Payload's brute-force lockout never activates for admin logins (confirmed by reading `payload/dist/auth/operations/login.js` — lockout only triggers when `maxLoginAttempts > 0`). Admin is the higher-value target (full customer PII, pricing, Stripe config) and currently the less-protected login.
+- **`/logout` and `/account/portal` are plain `GET` routes with side effects** (already on the launch checklist above). `GET /logout` clears the session unconditionally — forgeable via `<img src>` or link prefetch. `GET /account/portal` redirects an authenticated session to Stripe billing on a bare GET. Convert both to POST-triggered actions.
+- **No Content-Security-Policy** (already on the launch checklist above). Other headers are set (HSTS, X-Frame-Options, etc.) but no CSP, so any stray XSS has no second line of defense.
+- **Rate limiting is per-server-instance only.** `src/lib/rate-limit.ts` is an in-memory map; on Vercel's serverless model each instance has its own counter, so the effective limit across instances is looser than the configured numbers suggest, especially for login/password-reset. A shared store (Upstash Redis, Vercel KV) would make this real.
+- **Email verification is disabled** (already tracked separately, see "Email verification disabled" in the assistant's memory / the TODO in `Customers.ts`). Restating here because it means anyone can register with an email they don't own — fine for now, not for production launch.
+- **Confirm Supabase's Data API and GraphQL are actually off** (already on the launch checklist above, still unconfirmed). Payload's tables have no row-level security, so if either is still on it's a second, unaudited path to every table.
+- **Dependency audit before going live.** `npm audit` currently shows moderate issues in `dompurify` (via Payload admin's rich-text editor dependency chain) and dev-only tooling (`esbuild`/`drizzle-kit`, no production impact). Worth a look at `dompurify` specifically since it affects what admins can safely paste into rich-text fields.
+- **Consider 2FA for `/admin`** before the live Stripe cutover and before other staff get admin access (the Users-vs-Клиенти naming-confusion note above already anticipates more people getting `/admin` access). No urgency while it's just the owner locally on the sandbox account.
+
+## Other backlog items (2026-09-16, owner requests, not yet scoped)
+
+- **Animations / interaction polish.** No specifics yet — owner wants "cool animations" on interactions somewhere on the site. Needs a follow-up conversation to pin down which interactions before building anything.
+- **Legal texts.** The footer's "Правила за ползване", "Политика за поверителност" and "Условия за връщане" links (`scripts/seed-content.ts`, `footerRight`) all currently point at `#` — there's no actual Terms of Service, Privacy Policy, or Returns page yet. Needs the owner to supply or approve the text (this is exactly the kind of Bulgarian copy that shouldn't be invented rather than provided/approved by the owner, per the copy rule in `CLAUDE.md`).
+- **Explicit "agree to receive emails" consent at registration.** Today `Customers.emailPreferences.newsletter` defaults to `true` with no checkbox shown at signup — worth checking whether that's GDPR-compliant for an EU (Bulgarian) audience, since opt-out-by-default marketing consent is legally shakier than an explicit opt-in checkbox on `/your-profile/register` (and the inline signup at `/join/delivery` / checkout).
 
 ## Working agreements that still apply
 

@@ -24,10 +24,15 @@ const nextConfig: NextConfig = {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
   async redirects() {
-    // /your-profile itself is retired (superseded by /register as the one login
-    // page); its sub-pages (/your-profile/register, /lost-password, /reset-password,
-    // /verify) are unaffected — those links were already emailed out.
-    return [{ source: "/your-profile", destination: "/register", permanent: true }];
+    // /your-profile itself is retired (superseded by /login as the one login page);
+    // its sub-pages (/your-profile/register, /lost-password, /reset-password, /verify)
+    // are unaffected — those links were already emailed out. /register was /login's
+    // own former slug, renamed 2026-09-16 because it read as sign-up to visitors —
+    // kept redirecting in case it's bookmarked anywhere.
+    return [
+      { source: "/your-profile", destination: "/login", permanent: true },
+      { source: "/register", destination: "/login", permanent: true },
+    ];
   },
 };
 

@@ -47,7 +47,7 @@ export async function login(_prev: FormState, fd: FormData): Promise<FormState> 
  */
 export async function logout(): Promise<void> {
   await clearAuthCookie();
-  redirect("/register");
+  redirect("/login");
 }
 
 /** Registration form. Field names: name, email, password, password2. */
@@ -100,13 +100,13 @@ export async function resetPassword(_prev: FormState, fd: FormData): Promise<For
   } catch {
     return { error: "Линкът е изтекъл или вече е използван. Поискай нов." };
   }
-  redirect("/register?reset=1");
+  redirect("/login?reset=1");
 }
 
 /** Profile form on /account/details. */
 export async function updateProfile(_prev: FormState, fd: FormData): Promise<FormState> {
   const customer = await getCustomer();
-  if (!customer) redirect("/register");
+  if (!customer) redirect("/login");
 
   const name = str(fd, "name");
   const email = str(fd, "email").toLowerCase();

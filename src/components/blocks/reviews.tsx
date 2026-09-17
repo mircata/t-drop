@@ -5,9 +5,12 @@ import type { Page } from "@/payload-types";
 
 type Props = Extract<NonNullable<Page["layout"]>[number], { blockType: "reviews" }>;
 
-/* Card tilt, image size and sticker position per card, from the WordPress render. */
+/* Card tilt, image size and sticker position per card, from the WordPress render.
+   Card 1's sticker is lifted onto the photo (the WordPress offset dropped it across the
+   quote, hiding "Перфект" on lg+ and clipping the first line at md); cards 2 and 3 already
+   sat clear. See the note in CLAUDE.md before restoring any of these to the Elementor values. */
 const CARDS = [
-  { rotate: "-rotate-[4deg]", w: 480, h: 580, aspect: "aspect-[480/580]", badge: `${badgeNeon} left-[-65px] top-[405px] w-1/2 rotate-[14deg] md:max-lg:left-[-35px] md:max-lg:top-[181px] md:max-lg:w-full max-md:left-[-11px] max-md:top-[275px] max-md:w-[179px]` },
+  { rotate: "-rotate-[4deg]", w: 480, h: 580, aspect: "aspect-[480/580]", badge: `${badgeNeon} left-[-65px] top-[325px] w-1/2 rotate-[14deg] md:max-lg:left-[-35px] md:max-lg:top-[141px] md:max-lg:w-full max-md:left-[-11px] max-md:top-[275px] max-md:w-[179px]` },
   { rotate: "rotate-0", w: 600, h: 800, aspect: undefined, badge: `${badgeRed} left-[247px] top-[389px] w-1/2 rotate-[14deg] md:max-lg:left-[51px] md:max-lg:top-[-19px] md:max-lg:w-full max-md:left-[11px] max-md:top-[327px] max-md:w-[140px]` },
   { rotate: "rotate-[4deg]", w: 600, h: 800, aspect: undefined, badge: `${badgeNeon} left-[-49px] top-[333px] w-1/2 rotate-[14deg] md:max-lg:left-[40px] md:max-lg:top-[171px] md:max-lg:w-full max-md:left-[169px] max-md:top-[337px] max-md:w-[139px]` },
 ];

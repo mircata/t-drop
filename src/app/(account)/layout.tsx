@@ -29,7 +29,7 @@ const dot = Handjet({
 });
 
 export const metadata: Metadata = {
-  title: "My account – T-Drop Monthly T-Shirts",
+  title: "Акаунт – T-Drop Monthly T-Shirts",
   description: "Свежи тениски всеки месец на вратата ти",
   icons: { icon: "/wp/2026/04/cropped-favicon-1.png" },
 };

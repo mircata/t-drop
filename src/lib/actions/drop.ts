@@ -18,7 +18,7 @@ type Gender = "male" | "female";
  */
 export async function pickCategory(formData: FormData) {
   const customer = await getCustomer();
-  if (!customer) redirect("/register");
+  if (!customer) redirect("/login");
 
   const categoryId = Number(formData.get("drop") ?? 0);
   const size = String(formData.get("size") ?? "");

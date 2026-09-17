@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Адрес за доставка –
 
 export default async function ShippingAddressPage() {
   const customer = await getCustomer();
-  if (!customer) redirect("/register");
+  if (!customer) redirect("/login");
 
   const payload = await getPayloadClient();
   const subs = await payload.find({ collection: "subscriptions", where: { customer: { equals: customer.id } }, depth: 0, limit: 10 });

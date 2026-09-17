@@ -20,7 +20,8 @@ export function AboutStoryBlock(b: Props) {
 
           <div className="relative mt-20 flex w-full flex-col gap-10 pt-10 max-lg:items-center">
             <h2 className={headline}>{b.step1Heading}</h2>
-            <div className={`${badgeNeon} left-[202px] top-[34px] w-1/2 rotate-[5deg] md:max-lg:left-[51px] md:max-lg:top-[-11px] md:max-lg:w-[139px] max-md:left-[78px] max-md:top-[-28px] max-md:w-[179px]`}>{b.step1Sticker}</div>
+            {/* Sticker sits above the heading, not across it: the Elementor offset hid "АШ" on lg+. */}
+            <div className={`${badgeNeon} left-[202px] top-[-32px] w-1/2 rotate-[5deg] md:max-lg:left-[51px] md:max-lg:top-[-11px] md:max-lg:w-[139px] max-md:left-[78px] max-md:top-[-28px] max-md:w-[179px]`}>{b.step1Sticker}</div>
             <p className="mb-[15px] md:max-lg:w-[60%] max-md:w-[80%]">
               <Lines text={b.step1Text} />
             </p>
@@ -40,13 +41,19 @@ export function AboutStoryBlock(b: Props) {
         </div>
       </div>
 
-      <div className="flex w-1/2 flex-col max-lg:hidden">
-        <div className="sticky top-[120px] flex flex-row items-center justify-center">
-          <Image src="/wp/2025/12/shapeA.svg" alt="" width={270} height={188} className="absolute left-[195px] top-[211px] w-[270px]" />
-          <div className="w-[32%] shrink-0">
-            <Shirt src={mediaUrl(b.shirt, SHIRT)} className="rotate-[9deg] scale-[1.3]" />
+      {/* The shirt's rotate+scale overflows 99px above its layout box, so a 150px gap from the top
+          of the page needs 249px of offset. pt matches the sticky top, otherwise the shirt would
+          start overlapping the header and only drop into place once it began sticking. */}
+      <div className="flex w-1/2 flex-col pt-[93px] max-lg:hidden">
+        <div className="sticky top-[249px] flex flex-row items-center justify-center">
+          {/* Scaled 20% as one unit so the shirt and the blob keep their relative geometry. */}
+          <div className="relative flex w-full scale-[1.2] flex-row items-center justify-center">
+            <Image src="/wp/2025/12/shapeA.svg" alt="" width={270} height={188} className="absolute left-[195px] top-[211px] w-[270px]" />
+            <div className="w-[32%] shrink-0">
+              <Shirt src={mediaUrl(b.shirt, SHIRT)} className="rotate-[9deg] scale-[1.3]" />
+            </div>
+            <div className="z-[2] w-[35%]" />
           </div>
-          <div className="z-[2] w-[35%]" />
         </div>
       </div>
     </section>

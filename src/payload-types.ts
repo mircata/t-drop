@@ -207,6 +207,7 @@ export interface Customer {
    */
   shipping?: {
     recipientName?: string | null;
+    city?: string | null;
     postcode?: string | null;
     carrier?: ('speedy' | 'sameday' | 'boxnow') | null;
     addressOrOffice?: string | null;
@@ -679,6 +680,7 @@ export interface CustomersSelect<T extends boolean = true> {
     | T
     | {
         recipientName?: T;
+        city?: T;
         postcode?: T;
         carrier?: T;
         addressOrOffice?: T;

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { RegisterForm } from "@/components/forms/register-form";
-import { wooTitle } from "@/components/forms/woo";
+import { AuthPage } from "@/components/site/auth-page";
 import { getCustomer } from "@/lib/auth";
 import { oauthEnabled } from "@/lib/oauth";
 
@@ -10,9 +10,8 @@ export const metadata: Metadata = { title: "Регистрация – T-Drop Mo
 export default async function RegisterCustomerPage() {
   if (await getCustomer()) redirect("/account");
   return (
-    <section className="site-container flex flex-col max-md:px-5">
-      <h2 className={wooTitle}>Регистрация</h2>
+    <AuthPage title="Направи си профил">
       <RegisterForm oauth={{ google: oauthEnabled("google"), facebook: oauthEnabled("facebook") }} />
-    </section>
+    </AuthPage>
   );
 }

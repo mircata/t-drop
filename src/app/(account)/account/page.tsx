@@ -10,7 +10,7 @@ import { getPayloadClient, mediaUrl } from "@/lib/payload";
 import { stripeEnabled } from "@/lib/stripe";
 import { dropMonth, isDropLocked, nextDeliveryDate } from "@/lib/stripe-sync";
 
-export const metadata: Metadata = { title: "My account – T-Drop Monthly T-Shirts" };
+export const metadata: Metadata = { title: "Акаунт – T-Drop Monthly T-Shirts" };
 
 /** Whole days from now until midnight (UTC) of the given date. */
 const daysUntil = (date: Date) => Math.max(0, Math.ceil((date.getTime() - Date.now()) / 86400000));
@@ -24,7 +24,7 @@ const GENDER_LABELS: Record<string, string> = { male: "Мъж", female: "Жен�
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const [customer, { picked, choose }] = await Promise.all([getCustomer(), searchParams]);
-  if (!customer) redirect("/register");
+  if (!customer) redirect("/login");
 
   const payload = await getPayloadClient();
   const site = await payload.findGlobal({ slug: "site", depth: 0 });

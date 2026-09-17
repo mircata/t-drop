@@ -175,7 +175,7 @@ export async function customerFromSession(payload: Payload, session: Stripe.Chec
       ? { line1: shippingAddress.line1 ?? "", line2: shippingAddress.line2 ?? "", city: shippingAddress.city ?? "", postcode: shippingAddress.postal_code ?? "", country: shippingAddress.country ?? "BG" }
       : undefined,
     shipping: m.recipientName
-      ? { recipientName: m.recipientName, postcode: m.postcode, carrier: m.carrier as "speedy" | "sameday" | "boxnow" | undefined, addressOrOffice: m.addressOrOffice }
+      ? { recipientName: m.recipientName, city: m.city, postcode: m.postcode, carrier: m.carrier as "speedy" | "sameday" | "boxnow" | undefined, addressOrOffice: m.addressOrOffice }
       : undefined,
     payloadCustomerId: session.client_reference_id || session.metadata?.payloadCustomerId,
   });

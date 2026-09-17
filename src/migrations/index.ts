@@ -9,6 +9,7 @@ import * as migration_20260915_003600_delivery_day from './20260915_003600_deliv
 import * as migration_20260915_150000_category_selection_size_gender from './20260915_150000_category_selection_size_gender';
 import * as migration_20260915_151500_customer_shipping from './20260915_151500_customer_shipping';
 import * as migration_20260915_160000_fulfillment_status from './20260915_160000_fulfillment_status';
+import * as migration_20260917_000500_shipping_city from './20260917_000500_shipping_city';
 
 export const migrations = [
   {
@@ -65,5 +66,10 @@ export const migrations = [
     up: migration_20260915_160000_fulfillment_status.up,
     down: migration_20260915_160000_fulfillment_status.down,
     name: '20260915_160000_fulfillment_status'
+  },
+  {
+    up: migration_20260917_000500_shipping_city.up,
+    down: migration_20260917_000500_shipping_city.down,
+    name: '20260917_000500_shipping_city'
   },
 ];

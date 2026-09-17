@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { anyone, isAdmin } from "../lib/access";
+import { blockDeleteIfReferenced } from "../lib/delete-guards";
 
 /**
  * What a customer can subscribe to. One row per Stripe price. The price here
@@ -13,6 +14,11 @@ export const Plans: CollectionConfig = {
     useAsTitle: "name",
     defaultColumns: ["name", "priceCents", "active", "stripePriceId"],
     group: "Абонаменти",
+  },
+  hooks: {
+    beforeDelete: [
+      blockDeleteIfReferenced([{ collection: "subscriptions", field: "plan", label: "Абонаменти" }]),
+    ],
   },
   fields: [
     { name: "name", type: "text", label: "Име", required: true },

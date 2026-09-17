@@ -6,7 +6,7 @@ import { authorizeUrl, isOAuthProvider, oauthEnabled, OAUTH_STATE_COOKIE } from 
 export async function GET(request: Request, { params }: { params: Promise<{ provider: string }> }) {
   const { provider } = await params;
   if (!isOAuthProvider(provider) || !oauthEnabled(provider)) {
-    return NextResponse.redirect(new URL("/register?error=oauth-off", request.url));
+    return NextResponse.redirect(new URL("/login?error=oauth-off", request.url));
   }
 
   const state = randomBytes(16).toString("hex");

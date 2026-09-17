@@ -15,7 +15,7 @@ const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
  * The "Поръчай" button on /join/delivery (the second step, after the gender/size/design
  * picker on /join). For a signed-out visitor this also creates their account and logs
  * them in, right here, before Stripe — email/password/password2 fields, same rules as
- * /register — instead of relying on the webhook's guest-checkout fallback (resolveCustomer
+ * /your-profile/register — instead of relying on the webhook's guest-checkout fallback (resolveCustomer
  * in stripe-sync.ts), which emails a "choose your password" link that only works if
  * RESEND_API_KEY is configured. Builds a Stripe Checkout Session in subscription mode and
  * sends the visitor to Stripe, with the new account's email attached to the Stripe Customer
@@ -33,10 +33,11 @@ export async function startCheckout(formData: FormData) {
   const deliveryParams = `gender=${gender}&size=${size}&theme=${categoryId}`;
   const recipientName = String(formData.get("recipientName") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  const city = String(formData.get("city") ?? "").trim();
   const postcode = String(formData.get("postcode") ?? "").trim();
   const carrier = String(formData.get("carrier") ?? "");
   const addressOrOffice = String(formData.get("addressOrOffice") ?? "").trim();
-  if (!recipientName || !phone || !postcode || !CARRIERS.has(carrier) || !addressOrOffice) {
+  if (!recipientName || !phone || !city || !postcode || !CARRIERS.has(carrier) || !addressOrOffice) {
     redirect(`/join/delivery?${deliveryParams}&error=delivery-fields`);
   }
 
@@ -90,6 +91,7 @@ export async function startCheckout(formData: FormData) {
     payloadCustomerId: String(customer.id),
     recipientName,
     phone,
+    city,
     postcode,
     carrier,
     addressOrOffice,

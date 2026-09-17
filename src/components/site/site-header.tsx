@@ -15,7 +15,7 @@ type HeaderNavItem = NavItem & { accent?: boolean };
 const LOGGED_OUT_NAV: HeaderNavItem[] = [
   { href: "/join", label: "Запиши се", accent: true },
   { href: "/about", label: "За нас" },
-  { href: "/register", label: "Вход" },
+  { href: "/login", label: "Вход" },
 ];
 const LOGGED_IN_NAV: HeaderNavItem[] = [
   { href: "/about", label: "За нас" },
@@ -77,16 +77,19 @@ export function SiteHeader({ announcement }: { announcement: string }) {
           />
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-end lg:flex">
+        {/* Figma "Login" header (495:316): links 50px apart, "Запиши се" as a 174×33 outlined pill. */}
+        <nav className="hidden flex-1 items-center justify-end gap-[50px] lg:flex">
           {nav.map((item) => {
             const active = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-5 py-[13px] font-headline text-[14px] uppercase leading-[1.12] tracking-[0.84px] hover:text-t-red ${
-                  item.accent || active ? "text-t-red" : "text-[#686868]"
-                }`}
+                className={
+                  item.accent
+                    ? "flex h-[33px] w-[174px] items-center justify-center rounded-full border border-t-red font-headline text-[12px] uppercase leading-none tracking-[0.72px] text-t-red hover:bg-t-red hover:text-t-cream"
+                    : `py-[13px] font-headline text-[14px] uppercase leading-[1.12] tracking-[0.84px] hover:text-t-red ${active ? "text-t-red" : "text-[#686868]"}`
+                }
               >
                 {item.label}
               </Link>

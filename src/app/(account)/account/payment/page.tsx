@@ -14,7 +14,7 @@ const CARD_BRANDS: Record<string, string> = { visa: "Visa", mastercard: "Masterc
 
 export default async function PaymentMethodPage() {
   const customer = await getCustomer();
-  if (!customer) redirect("/register");
+  if (!customer) redirect("/login");
 
   const payload = await getPayloadClient();
   const [subs, currentCard] = await Promise.all([

@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     limit: 2000,
   });
 
-  const header = ["Клиент", "Телефон", "Получател", "Пощенски код", "Спедитор", "Адрес / офис", "Категория", "Размер", "Пол", "Статус", "Месец"];
+  const header = ["Клиент", "Телефон", "Получател", "Град", "Пощенски код", "Спедитор", "Адрес / офис", "Категория", "Размер", "Пол", "Статус", "Месец"];
   const rows = picks.docs.map((p) => {
     const customer = typeof p.customer === "object" ? p.customer : null;
     const category = typeof p.category === "object" ? p.category : null;
@@ -32,6 +32,7 @@ export async function GET(request: Request) {
       customer?.name ?? "",
       customer?.phone ?? "",
       shipping.recipientName ?? "",
+      shipping.city ?? "",
       shipping.postcode ?? "",
       shipping.carrier ?? "",
       shipping.addressOrOffice ?? "",

@@ -10,16 +10,17 @@ const CARRIERS = new Set(["speedy", "sameday", "boxnow"]);
 
 export type FormState = { error?: string; ok?: boolean };
 
-/** Доставка form on /account/address: recipient name, postcode, carrier, exact address or courier office. */
+/** Доставка form on /account/address: recipient name, city, postcode, carrier, exact address or courier office. */
 export async function updateShipping(_prev: FormState, fd: FormData): Promise<FormState> {
   const customer = await getCustomer();
-  if (!customer) redirect("/register");
+  if (!customer) redirect("/login");
 
   const recipientName = str(fd, "recipientName");
+  const city = str(fd, "city");
   const postcode = str(fd, "postcode");
   const carrier = str(fd, "carrier");
   const addressOrOffice = str(fd, "addressOrOffice");
-  if (!recipientName || !postcode || !CARRIERS.has(carrier) || !addressOrOffice) {
+  if (!recipientName || !city || !postcode || !CARRIERS.has(carrier) || !addressOrOffice) {
     return { error: "Попълни всички полета." };
   }
 
@@ -27,7 +28,7 @@ export async function updateShipping(_prev: FormState, fd: FormData): Promise<Fo
   await payload.update({
     collection: "customers",
     id: customer.id,
-    data: { shipping: { recipientName, postcode, carrier: carrier as "speedy" | "sameday" | "boxnow", addressOrOffice } },
+    data: { shipping: { recipientName, city, postcode, carrier: carrier as "speedy" | "sameday" | "boxnow", addressOrOffice } },
   });
   revalidatePath("/account/address");
   return { ok: true };

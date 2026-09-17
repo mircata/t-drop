@@ -25,7 +25,8 @@ export const getSite = cache(async () => {
   return payload.findGlobal({ slug: "site", depth: 0 });
 });
 
-const MONTHS_BG = ["ЯНУ", "ФЕВ", "МАР", "АПР", "МАЙ", "ЮНИ", "ЮЛИ", "АВГ", "СЕП", "ОКТ", "НОВ", "ДЕК"];
+/** Month abbreviations as the announcement strip and the /join drop badge show them. */
+export const MONTHS_BG = ["ЯНУ", "ФЕВ", "МАР", "АПР", "МАЙ", "ЮНИ", "ЮЛИ", "АВГ", "СЕП", "ОКТ", "НОВ", "ДЕК"];
 
 /**
  * The announcement strip text with its `{date}` and `{themes}` placeholders filled

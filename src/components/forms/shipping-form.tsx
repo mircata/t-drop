@@ -18,6 +18,10 @@ export function ShippingForm({ customer }: { customer: Customer }) {
 
       <div className="flex flex-col gap-[14px]">
         <input name="recipientName" defaultValue={s.recipientName ?? customer.name} required placeholder="Име" className={field} />
+        {/* Град added 2026-09-17 alongside the /join/delivery redesign — updateShipping
+            requires it now, so this form has to collect it too. Kept in this page's own
+            pill style; the account area follows its own 2026-09-15 design, not /join's. */}
+        <input name="city" defaultValue={s.city ?? ""} required placeholder="Град" className={field} />
         <div className="flex flex-col gap-[14px] sm:flex-row">
           <input name="phone" defaultValue={customer.phone ?? ""} required placeholder="Тел. номер" className={field} />
           <input name="postcode" defaultValue={s.postcode ?? ""} required placeholder="ПК" className={field} />

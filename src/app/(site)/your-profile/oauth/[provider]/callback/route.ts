@@ -4,7 +4,7 @@ import { getPayloadClient } from "@/lib/payload";
 import { rateLimited } from "@/lib/rate-limit";
 import { exchangeCode, isOAuthProvider, oauthEnabled, randomPassword, OAUTH_STATE_COOKIE } from "@/lib/oauth";
 
-const fail = (request: Request, error: string) => NextResponse.redirect(new URL(`/register?error=${error}`, request.url));
+const fail = (request: Request, error: string) => NextResponse.redirect(new URL(`/login?error=${error}`, request.url));
 
 /**
  * GET /your-profile/oauth/google/callback or /facebook/callback. Finds or

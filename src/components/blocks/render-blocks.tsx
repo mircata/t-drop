@@ -45,7 +45,7 @@ export function RenderBlocks({ blocks, site, wrapSocial = false }: { blocks: Pag
       case "aboutStory":
         return <AboutStoryBlock key={key} {...block} />;
       case "aboutWhen":
-        return <AboutWhenBlock key={key} {...block} />;
+        return <AboutWhenBlock key={key} {...block} deliveryDay={site.deliveryDay} />;
       default:
         return null;
     }

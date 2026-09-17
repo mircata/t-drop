@@ -26,7 +26,7 @@ const ymOf = (iso: string) => iso.slice(0, 7);
 
 export default async function OrdersPage() {
   const customer = await getCustomer();
-  if (!customer) redirect("/register");
+  if (!customer) redirect("/login");
 
   const payload = await getPayloadClient();
   const [subs, payments, picks] = await Promise.all([

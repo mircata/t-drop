@@ -11,7 +11,7 @@ export default defineConfig({
   use: { baseURL: "http://localhost:3111", trace: "retain-on-failure" },
   webServer: {
     command: "npm run dev -- --port 3111",
-    url: "http://localhost:3111/register",
+    url: "http://localhost:3111/login",
     reuseExistingServer: false,
     timeout: 120000,
     env: {

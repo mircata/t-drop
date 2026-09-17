@@ -32,14 +32,14 @@ test("register, verify by token, log in, see the dashboard", async ({ page }) =>
   await expect(page).toHaveURL(/verified=1/);
   await expect(page.getByText("Имейлът е потвърден")).toBeVisible();
 
-  await page.getByLabel("Потребителско име или имейл адрес").fill(email);
-  await page.getByLabel("Парола", { exact: false }).first().fill("wrong-password");
-  await page.getByRole("button", { name: "Влизане" }).click();
+  await page.getByLabel("Имейл", { exact: true }).fill(email);
+  await page.getByLabel("Парола", { exact: true }).fill("wrong-password");
+  await page.getByRole("button", { name: "Вход" }).click();
   await expect(page.getByText("Грешен имейл или парола")).toBeVisible();
 
-  await page.getByLabel("Потребителско име или имейл адрес").fill(email);
-  await page.getByLabel("Парола", { exact: false }).first().fill(password);
-  await page.getByRole("button", { name: "Влизане" }).click();
+  await page.getByLabel("Имейл", { exact: true }).fill(email);
+  await page.getByLabel("Парола", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Вход" }).click();
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByText("Абонамента ви е неактивен")).toBeVisible();
 });
@@ -54,11 +54,11 @@ test("pick a drop theme and change it", async ({ page }) => {
     [email, `sub_smoke_${stamp}`],
   );
 
-  // /your-profile is retired and redirects to /register, the surviving login page.
+  // /your-profile is retired and redirects to /login, the surviving login page.
   await page.goto("/your-profile");
-  await page.getByLabel("Username or Email Address").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Влез" }).click();
+  await page.getByLabel("Имейл", { exact: true }).fill(email);
+  await page.getByLabel("Парола", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Вход" }).click();
   await expect(page).toHaveURL(/\/account$/);
 
   const cards = page.locator('input[name="drop"]');
@@ -76,9 +76,9 @@ test("pick a drop theme and change it", async ({ page }) => {
 test("logout protects the dashboard again", async ({ page }) => {
   await page.goto("/logout");
   await page.goto("/account");
-  // /account redirects unauthenticated visitors to /your-profile, which itself
-  // redirects to /register (the surviving login page) — see next.config.ts.
-  await expect(page).toHaveURL(/\/register$/);
+  // /account redirects unauthenticated visitors straight to /login, the surviving
+  // login page (renamed from /register 2026-09-16 — see next.config.ts).
+  await expect(page).toHaveURL(/\/login$/);
 });
 
 test("newsletter double opt-in", async ({ page }) => {
