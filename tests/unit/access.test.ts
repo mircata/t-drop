@@ -40,7 +40,7 @@ describe("media", () => {
 describe("category-selections", () => {
   it("a customer sees only their own pick; another customer and anonymous see nothing", async () => {
     const { category } = await seedPlanAndCategory(payload);
-    const pick = await payload.create({ collection: "category-selections", data: { customer: alice.id, month: "2026-03", category: category.id } });
+    const pick = await payload.create({ collection: "category-selections", data: { customer: alice.id, month: "2026-03", slot: 1, category: category.id } });
 
     const mine = await payload.find({ collection: "category-selections", ...asUser(alice) });
     expect(mine.docs.map((d) => d.id)).toEqual([pick.id]);
@@ -51,8 +51,24 @@ describe("category-selections", () => {
   it("a customer cannot write their own pick directly", async () => {
     const { category } = await seedPlanAndCategory(payload);
     await expect(
-      payload.create({ collection: "category-selections", data: { customer: alice.id, month: "2026-03", category: category.id }, ...asUser(alice) }),
+      payload.create({ collection: "category-selections", data: { customer: alice.id, month: "2026-03", slot: 1, category: category.id }, ...asUser(alice) }),
     ).rejects.toThrow();
+  });
+});
+
+describe("signup-drafts", () => {
+  it("is closed to anonymous callers and to customers alike", async () => {
+    // Drafts hold an email address for someone who has no account yet, and the funnel's
+    // server actions reach them through the Local API, which skips access entirely. So
+    // nothing on the public side may read or write one — not even a signed-in customer,
+    // who has no business seeing another person's half-finished signup.
+    const draft = await payload.create({ collection: "signup-drafts", data: { email: "pending@example.com", step: "plan" } });
+    await expect(payload.find({ collection: "signup-drafts", ...asUser() })).rejects.toThrow();
+    await expect(payload.find({ collection: "signup-drafts", ...asUser(alice) })).rejects.toThrow();
+    await expect(payload.create({ collection: "signup-drafts", data: { email: "evil@example.com" }, ...asUser() })).rejects.toThrow();
+    await expect(payload.create({ collection: "signup-drafts", data: { email: "evil@example.com" }, ...asUser(alice) })).rejects.toThrow();
+    await expect(payload.update({ collection: "signup-drafts", id: draft.id, data: { emailVerified: true }, ...asUser(alice) })).rejects.toThrow();
+    await expect(payload.delete({ collection: "signup-drafts", id: draft.id, ...asUser(alice) })).rejects.toThrow();
   });
 });
 
@@ -62,7 +78,7 @@ describe("anonymous", () => {
     await expect(payload.find({ collection: "plans", ...asUser() })).resolves.toMatchObject({ totalDocs: 1 });
     await expect(payload.find({ collection: "categories", ...asUser() })).resolves.toMatchObject({ totalDocs: 1 });
     await expect(payload.findGlobal({ slug: "site", ...asUser() })).resolves.toBeTruthy();
-    for (const collection of ["customers", "users", "subscriptions", "payments", "category-selections", "subscribers", "webhook-events"] as const) {
+    for (const collection of ["customers", "users", "subscriptions", "payments", "category-selections", "signup-drafts", "subscribers", "webhook-events"] as const) {
       await expect(payload.find({ collection, ...asUser() }), collection).rejects.toThrow();
     }
   });
@@ -91,7 +107,7 @@ describe("a signed-in customer", () => {
     await expect(payload.find({ collection: "users", ...asUser(alice) })).rejects.toThrow();
     await expect(payload.update({ collection: "pages", id: page.id, data: { title: "pwned" }, ...asUser(alice) })).rejects.toThrow();
     await expect(payload.updateGlobal({ slug: "site", data: { ...site, announcement: "pwned" }, ...asUser(alice) })).rejects.toThrow();
-    await expect(payload.create({ collection: "plans", data: { name: "free", priceCents: 0, currency: "eur" }, ...asUser(alice) })).rejects.toThrow();
+    await expect(payload.create({ collection: "plans", data: { name: "free", priceCents: 0, currency: "eur", shirtCount: 1 }, ...asUser(alice) })).rejects.toThrow();
     await expect(payload.create({ collection: "categories", data: { name: "x" }, ...asUser(alice) })).rejects.toThrow();
     await expect(payload.delete({ collection: "subscriptions", id: (await payload.find({ collection: "subscriptions" })).docs[0].id, ...asUser(alice) })).rejects.toThrow();
   });

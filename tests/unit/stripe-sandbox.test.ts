@@ -30,7 +30,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await resetDatabase(payload);
-  await payload.create({ collection: "plans", data: { name: "Месечен абонамент", priceCents: 1799, currency: "eur", stripePriceId: "price_1UEyODCxAYTvDqO27crKlqa2", active: true } });
+  await payload.create({ collection: "plans", data: { name: "Месечен абонамент", priceCents: 1799, currency: "eur", shirtCount: 1, stripePriceId: "price_1UEyODCxAYTvDqO27crKlqa2", active: true } });
 });
 
 describe("recorded sandbox lifecycle", () => {

@@ -15,6 +15,12 @@ type Gender = "male" | "female";
  * month — design, size and gender together — a new pick before the drop date
  * replaces the old one. After the drop date the pick is locked until the
  * owner sets the next date in /admin.
+ *
+ * Slot 1 only. This form predates multi-shirt packages and still shows a single picker;
+ * rewriting /account to edit all of a package's shirts is stage 2 of the redesign
+ * (docs/new-user-flow.md). Until then a Supporter or Family customer can only change their
+ * first shirt here, so the slot is pinned rather than left to the default — an unscoped
+ * query would otherwise update whichever row came back first.
  */
 export async function pickCategory(formData: FormData) {
   const customer = await getCustomer();
@@ -36,14 +42,14 @@ export async function pickCategory(formData: FormData) {
   const month = dropMonth(site.deliveryDay);
   const existing = await payload.find({
     collection: "category-selections",
-    where: { and: [{ customer: { equals: customer.id } }, { month: { equals: month } }] },
+    where: { and: [{ customer: { equals: customer.id } }, { month: { equals: month } }, { slot: { equals: 1 } }] },
     limit: 1,
   });
   const sizeGender = { size: size as Size, gender: gender as Gender };
   if (existing.docs[0]) {
     await payload.update({ collection: "category-selections", id: existing.docs[0].id, data: { category: category.id, ...sizeGender } });
   } else {
-    await payload.create({ collection: "category-selections", data: { customer: customer.id, month, category: category.id, ...sizeGender } });
+    await payload.create({ collection: "category-selections", data: { customer: customer.id, month, slot: 1, category: category.id, ...sizeGender } });
   }
   redirect("/account?picked=ok#drop");
 }

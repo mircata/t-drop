@@ -10,6 +10,7 @@ import * as migration_20260915_150000_category_selection_size_gender from './202
 import * as migration_20260915_151500_customer_shipping from './20260915_151500_customer_shipping';
 import * as migration_20260915_160000_fulfillment_status from './20260915_160000_fulfillment_status';
 import * as migration_20260917_000500_shipping_city from './20260917_000500_shipping_city';
+import * as migration_20260922_120000_new_user_flow from './20260922_120000_new_user_flow';
 
 export const migrations = [
   {
@@ -71,5 +72,10 @@ export const migrations = [
     up: migration_20260917_000500_shipping_city.up,
     down: migration_20260917_000500_shipping_city.down,
     name: '20260917_000500_shipping_city'
+  },
+  {
+    up: migration_20260922_120000_new_user_flow.up,
+    down: migration_20260922_120000_new_user_flow.down,
+    name: '20260922_120000_new_user_flow'
   },
 ];

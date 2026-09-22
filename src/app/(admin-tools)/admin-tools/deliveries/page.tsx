@@ -29,7 +29,9 @@ export default async function DeliveriesPage({ searchParams }: { searchParams: P
   const picks = await payload.find({
     collection: "category-selections",
     where: { month: { equals: month } },
-    sort: "customer",
+    /* One row per shirt since 2026-09-22, so a Family customer appears four times. Sorted
+       by slot within the customer to keep their shirts together and in order. */
+    sort: ["customer", "slot"],
     depth: 2,
     limit: 1000,
   });
@@ -44,7 +46,7 @@ export default async function DeliveriesPage({ searchParams }: { searchParams: P
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-headline text-[26px] uppercase tracking-[0.5px]">Доставки</h1>
-          <p className="font-roboto text-[14px] text-[#666]">Кой какво получава, за печат/спедиция. {picks.docs.length} поръчки за {month}.</p>
+          <p className="font-roboto text-[14px] text-[#666]">Кой какво получава, за печат/спедиция. {picks.docs.length} тениски за {month}.</p>
         </div>
         <div className="flex items-end gap-3">
           <form className="flex items-end gap-2">
@@ -79,6 +81,7 @@ export default async function DeliveriesPage({ searchParams }: { searchParams: P
                 <th className={th}>Клиент</th>
                 <th className={th}>Телефон</th>
                 <th className={th}>Получател</th>
+                <th className={th}>Тениска</th>
                 <th className={th}>ПК</th>
                 <th className={th}>Спедитор</th>
                 <th className={th}>Адрес / офис</th>
@@ -98,9 +101,10 @@ export default async function DeliveriesPage({ searchParams }: { searchParams: P
                     <td className={td}>{customer?.name ?? "—"}</td>
                     <td className={td}>{customer?.phone ?? "—"}</td>
                     <td className={td}>{shipping.recipientName ?? "—"}</td>
+                    <td className={td}>{p.slot}</td>
                     <td className={td}>{shipping.postcode ?? "—"}</td>
                     <td className={td}>{shipping.carrier ?? "—"}</td>
-                    <td className={td}>{shipping.addressOrOffice ?? "—"}</td>
+                    <td className={td}>{shipping.officeName ?? shipping.addressOrOffice ?? "—"}</td>
                     <td className={td}>{category?.name ?? "—"}</td>
                     <td className={td}>{p.size?.toUpperCase() ?? "—"}</td>
                     <td className={td}>{p.gender === "male" ? "Мъж" : p.gender === "female" ? "Жена" : "—"}</td>

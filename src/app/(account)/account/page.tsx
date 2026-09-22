@@ -40,8 +40,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const [subs, categories, picks, previousPicks] = await Promise.all([
     payload.find({ collection: "subscriptions", where: { customer: { equals: customer.id } }, sort: "-createdAt", depth: 1, limit: 10 }),
     payload.find({ collection: "categories", where: { active: { equals: true } }, sort: "sortOrder", depth: 1, limit: 20 }),
-    payload.find({ collection: "category-selections", where: { and: [{ customer: { equals: customer.id } }, { month: { equals: month } }] }, depth: 2, limit: 1 }),
-    payload.find({ collection: "category-selections", where: { and: [{ customer: { equals: customer.id } }, { month: { less_than: deliveredThroughMonth } }] }, sort: "-month", depth: 2, limit: 1 }),
+    // Slot 1 only. A package can hold up to four shirts since 2026-09-22, but this page
+    // still shows and edits a single pick — rebuilding it to handle all of them is stage 2
+    // of the redesign (docs/new-user-flow.md). Sorted by slot so that until then it is
+    // consistently the first shirt shown rather than whichever row Postgres returned first.
+    payload.find({ collection: "category-selections", where: { and: [{ customer: { equals: customer.id } }, { month: { equals: month } }] }, sort: "slot", depth: 2, limit: 1 }),
+    payload.find({ collection: "category-selections", where: { and: [{ customer: { equals: customer.id } }, { month: { less_than: deliveredThroughMonth } }] }, sort: ["-month", "slot"], depth: 2, limit: 1 }),
   ]);
   const active = subs.docs.filter((s) => s.status !== "canceled" && s.status !== "unpaid" && s.status !== "past_due" && s.status !== "incomplete");
   const hasActive = active.length > 0;

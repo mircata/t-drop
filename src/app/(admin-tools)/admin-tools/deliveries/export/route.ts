@@ -18,12 +18,14 @@ export async function GET(request: Request) {
   const picks = await payload.find({
     collection: "category-selections",
     where: month ? { month: { equals: month } } : {},
-    sort: "customer",
+    /* One row per shirt, so a Family order is four lines. Sorted by slot within the
+       customer so the factory gets their shirts together and in order. */
+    sort: ["customer", "slot"],
     depth: 2,
     limit: 2000,
   });
 
-  const header = ["Клиент", "Телефон", "Получател", "Град", "Пощенски код", "Спедитор", "Адрес / офис", "Категория", "Размер", "Пол", "Статус", "Месец"];
+  const header = ["Клиент", "Телефон", "Получател", "Град", "Пощенски код", "Спедитор", "Адрес / офис", "Тениска", "Категория", "Размер", "Пол", "Статус", "Месец"];
   const rows = picks.docs.map((p) => {
     const customer = typeof p.customer === "object" ? p.customer : null;
     const category = typeof p.category === "object" ? p.category : null;
@@ -35,7 +37,8 @@ export async function GET(request: Request) {
       shipping.city ?? "",
       shipping.postcode ?? "",
       shipping.carrier ?? "",
-      shipping.addressOrOffice ?? "",
+      shipping.officeName ?? shipping.addressOrOffice ?? "",
+      String(p.slot ?? 1),
       category?.name ?? "",
       p.size?.toUpperCase() ?? "",
       p.gender === "male" ? "Мъж" : p.gender === "female" ? "Жена" : "",

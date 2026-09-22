@@ -12,6 +12,10 @@ export async function testPayload(): Promise<Payload> {
 
 const TABLES = [
   "webhook_events",
+  /* signup_drafts_picks cascades from signup_drafts, but TRUNCATE names it explicitly so
+     the list stays a complete inventory of what a test can leave behind. */
+  "signup_drafts_picks",
+  "signup_drafts",
   "category_selections",
   "payments",
   "subscriptions",
@@ -35,7 +39,7 @@ export async function resetDatabase(payload: Payload) {
 export async function seedPlanAndCategory(payload: Payload) {
   const plan = await payload.create({
     collection: "plans",
-    data: { name: "Месечен абонамент", priceCents: 1799, currency: "eur", stripePriceId: "price_test_001", active: true, sortOrder: 0 },
+    data: { name: "Месечен абонамент", priceCents: 1799, currency: "eur", shirtCount: 1, stripePriceId: "price_test_001", active: true, sortOrder: 0 },
   });
   const category = await payload.create({ collection: "categories", data: { name: "Арт", active: true, sortOrder: 0 } });
   return { plan, category };

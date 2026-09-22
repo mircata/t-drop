@@ -13,6 +13,7 @@ import { Subscriptions } from "./collections/Subscriptions";
 import { Payments } from "./collections/Payments";
 import { Categories } from "./collections/Categories";
 import { CategorySelections } from "./collections/CategorySelections";
+import { SignupDrafts } from "./collections/SignupDrafts";
 import { WebhookEvents } from "./collections/WebhookEvents";
 import { Subscribers } from "./collections/Subscribers";
 import { Media } from "./collections/Media";
@@ -72,7 +73,7 @@ export default buildConfig({
   // in the same browser at once instead of overwriting each other's session.
   cookiePrefix: "tdrop-admin",
   graphQL: { disable: true },
-  collections: [Users, Customers, Media, Pages, Plans, Subscriptions, Payments, Categories, CategorySelections, WebhookEvents, Subscribers],
+  collections: [Users, Customers, Media, Pages, Plans, Subscriptions, Payments, Categories, CategorySelections, SignupDrafts, WebhookEvents, Subscribers],
   globals: [Site],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",

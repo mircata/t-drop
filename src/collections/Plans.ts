@@ -12,7 +12,7 @@ export const Plans: CollectionConfig = {
   access: { read: anyone, create: isAdmin, update: isAdmin, delete: isAdmin },
   admin: {
     useAsTitle: "name",
-    defaultColumns: ["name", "priceCents", "active", "stripePriceId"],
+    defaultColumns: ["name", "shirtCount", "priceCents", "active", "stripePriceId"],
     group: "Абонаменти",
   },
   hooks: {
@@ -23,6 +23,30 @@ export const Plans: CollectionConfig = {
   fields: [
     { name: "name", type: "text", label: "Име", required: true },
     { name: "description", type: "textarea", label: "Описание" },
+    /* How many shirts one subscription delivers each month, i.e. how many picks the
+       customer makes per drop. The funnel repeats the design picker this many times and
+       writes one `category-selections` row per shirt (slot 1..shirtCount). */
+    {
+      name: "shirtCount",
+      type: "number",
+      label: "Брой тениски на месец",
+      required: true,
+      defaultValue: 1,
+      min: 1,
+      admin: { description: "Колко избора прави клиентът за един дроп." },
+    },
+    /* The ribbon on the package card in the funnel. "Избрано" is not here — that is the
+       runtime selected state, not a property of the plan. */
+    {
+      name: "badge",
+      type: "select",
+      label: "Етикет на картата",
+      defaultValue: "none",
+      options: [
+        { label: "Без", value: "none" },
+        { label: "Препоръчан", value: "recommended" },
+      ],
+    },
     {
       name: "priceCents",
       type: "number",

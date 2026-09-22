@@ -183,7 +183,7 @@ const plans = await payload.find({ collection: "plans", limit: 1 });
 if (plans.totalDocs === 0) {
   await payload.create({
     collection: "plans",
-    data: { name: "Месечен абонамент", priceCents: 1799, currency: "eur", active: true, sortOrder: 0 },
+    data: { name: "Месечен абонамент", priceCents: 1799, currency: "eur", shirtCount: 1, active: true, sortOrder: 0 },
   });
   payload.logger.info("Created plan Месечен абонамент (17.99 EUR).");
 }

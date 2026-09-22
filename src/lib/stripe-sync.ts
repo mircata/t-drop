@@ -331,16 +331,24 @@ export async function markPaymentRefunded(payload: Payload, charge: Stripe.Charg
   await payload.update({ collection: "payments", id: row.id, data: { status: "refunded" } });
 }
 
-/** Record the theme a new subscriber picked at checkout for the coming drop. Does not overwrite a pick made later. */
+/**
+ * Record the theme a new subscriber picked at checkout for the coming drop. Does not
+ * overwrite a pick made later.
+ *
+ * Writes slot 1 only. The old checkout collects a single design, so that is all there is
+ * to record; the new funnel carries a pick per shirt and will write its own rows. Scoped
+ * to the slot so that, once packages with more than one shirt exist, finding slot 2 filled
+ * does not make this skip an empty slot 1.
+ */
 export async function recordCheckoutPick(payload: Payload, customerId: number, categoryId: number | null, month: string) {
   if (!categoryId) return;
   const existing = await payload.find({
     collection: "category-selections",
-    where: { and: [{ customer: { equals: customerId } }, { month: { equals: month } }] },
+    where: { and: [{ customer: { equals: customerId } }, { month: { equals: month } }, { slot: { equals: 1 } }] },
     limit: 1,
   });
   if (existing.docs[0]) return;
-  await payload.create({ collection: "category-selections", data: { customer: customerId, month, category: categoryId } });
+  await payload.create({ collection: "category-selections", data: { customer: customerId, month, slot: 1, category: categoryId } });
 }
 
 /** Everything that should happen after a paid checkout. Idempotent. */

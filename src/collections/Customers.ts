@@ -135,6 +135,29 @@ export const Customers: CollectionConfig = {
             { label: "BoxNow", value: "boxnow" },
           ],
         },
+        /* Added 2026-09-22 for the courier APIs (docs/courier-integration.md). No carrier
+           API accepts a free-text office name — Speedy, Sameday and BOX NOW all want the
+           office/locker's own id — and none of them can tell a street address from an
+           office if both arrive in one field. The customer picks the carrier first and the
+           method second (owner's call, same day), so:
+             address → addressOrOffice holds the street line, officeId stays empty
+             office  → officeId + officeName, addressOrOffice stays empty (Speedy, Sameday)
+             locker  → same two fields (BOX NOW, and Sameday easybox)
+           officeName is the label shown to the customer when they picked it. Carriers
+           retire ids, and the delivery CSV and order history still need to say where it
+           went, so store both. */
+        {
+          name: "deliveryType",
+          type: "select",
+          label: "Начин на доставка",
+          options: [
+            { label: "До адрес", value: "address" },
+            { label: "До офис", value: "office" },
+            { label: "До автомат", value: "locker" },
+          ],
+        },
+        { name: "officeId", type: "text", label: "Код на офис/автомат", admin: { description: "Идентификаторът на куриера, не се въвежда на ръка." } },
+        { name: "officeName", type: "text", label: "Име на офис/автомат" },
         { name: "addressOrOffice", type: "text", label: "Точен адрес за доставка / офис на куриер" },
       ],
     },

@@ -6,6 +6,7 @@ import { SubscriptionStatusBar } from "@/components/site/subscription-status-bar
 import { getCustomer } from "@/lib/auth";
 import { getPayloadClient, mediaUrl } from "@/lib/payload";
 import { stripeEnabled } from "@/lib/stripe";
+import type { CategorySelection } from "@/payload-types";
 
 export const metadata: Metadata = { title: "История поръчки – T-Drop Monthly T-Shirts" };
 
@@ -32,15 +33,21 @@ export default async function OrdersPage() {
   const [subs, payments, picks] = await Promise.all([
     payload.find({ collection: "subscriptions", where: { customer: { equals: customer.id } }, depth: 0, limit: 10 }),
     payload.find({ collection: "payments", where: { customer: { equals: customer.id } }, sort: "-paidAt", depth: 0, limit: 50 }),
-    payload.find({ collection: "category-selections", where: { customer: { equals: customer.id } }, depth: 2, limit: 50 }),
+    payload.find({ collection: "category-selections", where: { customer: { equals: customer.id } }, sort: ["month", "slot"], depth: 2, limit: 200 }),
   ]);
   const hasActive = subs.docs.some((s) => !["canceled", "unpaid", "past_due", "incomplete"].includes(s.status));
 
-  const pickByMonth = new Map(
-    picks.docs
-      .filter((p) => typeof p.category === "object")
-      .map((p) => [p.month, p.category as Exclude<typeof p.category, number>]),
-  );
+  /* One category per month for the Категория column. A month can now hold up to four
+     picks, so this keeps the first by slot rather than the last one the map happened to
+     see; showing every shirt of a multi-shirt order is stage 2 of the redesign
+     (docs/new-user-flow.md). The query above sorts by month then slot, so the first entry
+     for a month is slot 1. */
+  type PickedCategory = Exclude<CategorySelection["category"], number>;
+  const pickByMonth = new Map<string, PickedCategory>();
+  for (const pick of picks.docs) {
+    if (typeof pick.category !== "object" || pickByMonth.has(pick.month)) continue;
+    pickByMonth.set(pick.month, pick.category);
+  }
 
   const rows: OrderRow[] = payments.docs.map((p) => {
     const category = pickByMonth.get(ymOf(p.paidAt ?? p.createdAt));

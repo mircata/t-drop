@@ -77,6 +77,7 @@ export interface Config {
     payments: Payment;
     categories: Category;
     'category-selections': CategorySelection;
+    'signup-drafts': SignupDraft;
     'webhook-events': WebhookEvent;
     subscribers: Subscriber;
     'payload-kv': PayloadKv;
@@ -95,6 +96,7 @@ export interface Config {
     payments: PaymentsSelect<false> | PaymentsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     'category-selections': CategorySelectionsSelect<false> | CategorySelectionsSelect<true>;
+    'signup-drafts': SignupDraftsSelect<false> | SignupDraftsSelect<true>;
     'webhook-events': WebhookEventsSelect<false> | WebhookEventsSelect<true>;
     subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -210,6 +212,12 @@ export interface Customer {
     city?: string | null;
     postcode?: string | null;
     carrier?: ('speedy' | 'sameday' | 'boxnow') | null;
+    deliveryType?: ('address' | 'office' | 'locker') | null;
+    /**
+     * Идентификаторът на куриера, не се въвежда на ръка.
+     */
+    officeId?: string | null;
+    officeName?: string | null;
     addressOrOffice?: string | null;
   };
   emailPreferences?: {
@@ -399,6 +407,11 @@ export interface Plan {
   id: number;
   name: string;
   description?: string | null;
+  /**
+   * Колко избора прави клиентът за един дроп.
+   */
+  shirtCount: number;
+  badge?: ('none' | 'recommended') | null;
   priceCents: number;
   currency: string;
   /**
@@ -481,11 +494,48 @@ export interface Category {
 export interface CategorySelection {
   id: number;
   customer: number | Customer;
+  /**
+   * 1 за първата тениска от пакета, 2 за втората и т.н.
+   */
+  slot: number;
   month: string;
   category: number | Category;
   size?: ('s' | 'm' | 'l' | 'xl') | null;
   gender?: ('male' | 'female') | null;
   fulfillmentStatus?: ('pending_payment' | 'preparing' | 'on_hold' | 'delivered' | 'cancelled') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Хора, започнали регистрация, които още нямат профил.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "signup-drafts".
+ */
+export interface SignupDraft {
+  id: number;
+  email: string;
+  step?: ('plan' | 'verify' | 'design' | 'account' | 'payment') | null;
+  plan?: (number | null) | Plan;
+  emailVerified?: boolean | null;
+  verifyToken?: string | null;
+  verifyTokenExpiresAt?: string | null;
+  /**
+   * Временно, докато изпращането на имейли не е включено.
+   */
+  verifiedWithoutEmail?: boolean | null;
+  picks?:
+    | {
+        slot: number;
+        category?: (number | null) | Category;
+        size?: ('s' | 'm' | 'l' | 'xl') | null;
+        gender?: ('male' | 'female') | null;
+        id?: string | null;
+      }[]
+    | null;
+  privacyAccepted?: boolean | null;
+  marketingOptIn?: boolean | null;
+  customer?: (number | null) | Customer;
   updatedAt: string;
   createdAt: string;
 }
@@ -576,6 +626,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'category-selections';
         value: number | CategorySelection;
+      } | null)
+    | ({
+        relationTo: 'signup-drafts';
+        value: number | SignupDraft;
       } | null)
     | ({
         relationTo: 'webhook-events';
@@ -683,6 +737,9 @@ export interface CustomersSelect<T extends boolean = true> {
         city?: T;
         postcode?: T;
         carrier?: T;
+        deliveryType?: T;
+        officeId?: T;
+        officeName?: T;
         addressOrOffice?: T;
       };
   emailPreferences?:
@@ -863,6 +920,8 @@ export interface PagesSelect<T extends boolean = true> {
 export interface PlansSelect<T extends boolean = true> {
   name?: T;
   description?: T;
+  shirtCount?: T;
+  badge?: T;
   priceCents?: T;
   currency?: T;
   stripePriceId?: T;
@@ -928,11 +987,39 @@ export interface CategoriesSelect<T extends boolean = true> {
  */
 export interface CategorySelectionsSelect<T extends boolean = true> {
   customer?: T;
+  slot?: T;
   month?: T;
   category?: T;
   size?: T;
   gender?: T;
   fulfillmentStatus?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "signup-drafts_select".
+ */
+export interface SignupDraftsSelect<T extends boolean = true> {
+  email?: T;
+  step?: T;
+  plan?: T;
+  emailVerified?: T;
+  verifyToken?: T;
+  verifyTokenExpiresAt?: T;
+  verifiedWithoutEmail?: T;
+  picks?:
+    | T
+    | {
+        slot?: T;
+        category?: T;
+        size?: T;
+        gender?: T;
+        id?: T;
+      };
+  privacyAccepted?: T;
+  marketingOptIn?: T;
+  customer?: T;
   updatedAt?: T;
   createdAt?: T;
 }
