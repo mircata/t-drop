@@ -117,6 +117,7 @@ dist
 *.db
 .beads-credential-key
 .beads/proxieddb/
+.beads.gate.lock
 
 # Next.js / editor
 .DS_Store

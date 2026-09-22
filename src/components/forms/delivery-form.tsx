@@ -2,38 +2,18 @@
 
 import { useState } from "react";
 import { ErrorNotice } from "@/components/forms/notice";
-import { authField } from "@/components/site/auth-page";
+import { CarrierRadios, Field, fieldLabel, sectionLabel } from "@/components/forms/field";
 import { startCheckout } from "@/lib/actions/checkout";
 
 /* Figma "DELIVERY page states" (501:525, redesign 2026-09-17). The redesign moved this
    page onto the same fields as the auth pages — labelled, 50.5px, rounded-[6px], red
-   border on grey — so it shares `authField` rather than keeping its old centred pills.
+   border on grey — so it uses the shared `Field` (forms/field.tsx) rather than its old centred pills.
    Two annotations on the frame: the Спедитор row is marked "checkboxes" and the
    "Поръчай" button "leads to stripe payment screen" (it already calls startCheckout).
    The carrier controls are drawn as circles with a filled inner dot, i.e. radios, and
    the owner confirmed one courier per order — so they are real radio inputs.
    There is only a "Logged OUT State" frame; for a signed-in customer the whole
    "информация за логин" section is dropped, as it was before. */
-
-const sectionLabel = "font-headline text-[18px] leading-[1.12] uppercase tracking-[1.44px] text-[#686868]";
-/* 23px line box, not the body's 1.2: Figma's "normal" leading for these 16px labels is
-   23px, which is what makes each label+field group exactly 83.5px tall. */
-const fieldLabel = "font-dot text-[16px] leading-[23px] text-[#212121]";
-
-const CARRIERS = [
-  { value: "speedy", label: "Speedy" },
-  { value: "boxnow", label: "Boxnow" },
-  { value: "sameday", label: "Sameday" },
-];
-
-function Field({ name, label, type = "text", ...rest }: { name: string; label: string; type?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <div className="flex w-full flex-col gap-[10px]">
-      <label className={fieldLabel} htmlFor={name}>{label}</label>
-      <input id={name} name={name} type={type} required className={authField} {...rest} />
-    </div>
-  );
-}
 
 export function DeliveryForm({
   gender,
@@ -81,25 +61,7 @@ export function DeliveryForm({
           CSV both use the postcode, so it stays on its own row under Град. */}
       <Field name="postcode" label="Пощенски код" autoComplete="postal-code" />
 
-      <fieldset className="flex w-full flex-col gap-[10px]">
-        <legend className={`${fieldLabel} mb-[10px]`}>Спедитор</legend>
-        <div className="flex w-full flex-row items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
-          {CARRIERS.map((c) => (
-            <label key={c.value} className="flex cursor-pointer flex-row items-center gap-[7px]">
-              <input
-                type="radio"
-                name="carrier"
-                value={c.value}
-                required
-                checked={carrier === c.value}
-                onChange={() => setCarrier(c.value)}
-                className="size-[23.571px] shrink-0 cursor-pointer appearance-none rounded-full border border-t-red bg-t-grey checked:border-t-red checked:bg-[radial-gradient(circle,#cc0e45_0_7.76px,transparent_7.76px)]"
-              />
-              <span className={fieldLabel}>{c.label}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <CarrierRadios value={carrier} onChange={setCarrier} />
 
       <Field name="addressOrOffice" label="Адрес на доставка/офис/автомат" autoComplete="street-address" />
 

@@ -45,7 +45,7 @@ function SetupForm({ onSaved }: { onSaved: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-[24px] lg:w-[719px]">
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-[28px] lg:w-[563px]">
       <PaymentElement />
       {error && <p className="text-[14px] text-t-red">{error}</p>}
       <button type="submit" disabled={!stripe || pending} className={submitButton}>
@@ -84,14 +84,26 @@ export function PaymentMethodForm() {
       options={{
         clientSecret,
         locale: "bg",
-        fonts: [{ cssSrc: "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" }],
+        fonts: [{ cssSrc: "https://fonts.googleapis.com/css2?family=Handjet&display=swap" }],
+        // Mirrors the shared field style (forms/field.tsx): Handjet labels over 6px-rounded
+        // grey inputs with a red border. Stripe renders in its own iframe, so our Tailwind
+        // classes can't reach it — this is the only way to match.
         appearance: {
           variables: {
             colorPrimary: "#cc0e45",
             colorText: "#212121",
             colorBackground: "#eaeaea",
-            borderRadius: "14px",
-            fontFamily: "Roboto, sans-serif",
+            colorDanger: "#cc0e45",
+            borderRadius: "6px",
+            fontFamily: "Handjet, sans-serif",
+            fontSizeBase: "18px",
+          },
+          rules: {
+            ".Input": { border: "1px solid #cc0e45", boxShadow: "none", padding: "13px 16px" },
+            ".Input:focus": { border: "2px solid #cc0e45", boxShadow: "none" },
+            ".Label": { fontSize: "16px", color: "#212121", marginBottom: "10px" },
+            ".Tab": { border: "1px solid #cc0e45", boxShadow: "none" },
+            ".AccordionItem": { backgroundColor: "transparent", border: "none", boxShadow: "none", paddingLeft: "0", paddingRight: "0" },
           },
         },
       }}
