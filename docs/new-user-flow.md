@@ -1,8 +1,10 @@
 # New user flow — Figma "NEW USER FLOW" (515:2)
 
-Read 2026-09-22 from the Figma section `515:2`, nine frames, all **402px wide — mobile
-only**. Nothing is built yet. This is what the design contains, what it changes, and what
-has to be answered before it can be built.
+Read 2026-09-22 from the Figma section `515:2`, ten frames, all **402px wide — mobile**,
+and re-read later the same day after the owner's revisions. A matching desktop section
+`525:1426` ("NEW USER FLOW - DESKTOP", eight frames at 1440px) was added in that round —
+see "Desktop" below. Nothing is built yet beyond the data model. This is what the design
+contains, what it changes, and what has to be answered before it can be built.
 
 Every frame's node id is given so a future session can go back to the source. Dev Mode
 annotations are quoted verbatim — they carry instructions that appear nowhere else.
@@ -55,6 +57,20 @@ based on this info here. You can translate it to bulgarian"*.
 "НАПРЕД" (`519:408`) is annotated *"when the user click it leads to the next step and send
 the user a confirmation link that when clicked it will verify his mail"*.
 
+**Revised later on 2026-09-22**: this frame grew from 874px to **2845px**. Two sections were
+added below the package cards, and НАПРЕД moved from just under the header to the bottom of
+the page (now `525:3866`, 362×71):
+
+- A **four-claim USP row** (`525:3798`, 359×295) — the same four claims as the existing
+  `JoinUsps` on `/join`: proven print technology, 100% cotton, artists hired monthly,
+  production in Bulgaria. Reuse the component rather than rebuilding it.
+- A **FAQ** (`525:3824`), heading "Често задавани въпроси", ten question/answer pairs in a
+  357px column. New Bulgarian copy, not the copy in the existing `faq` block. Two answers
+  are placeholders — see [pre-launch.md](pre-launch.md).
+
+So the package step is no longer a compact chooser; it is a scrolling page that sells the
+subscription and puts the button at the end.
+
 ### step 1-2 — потвърди мейл, waiting (`519:486`) and success (`519:579`)
 
 A dashed panel reading "В ИЗЧАКВАНЕ" in grey, then "ИЗПРАТИ ОТНОВО" and a "Друг мейл?"
@@ -93,6 +109,12 @@ One dashed-border card containing the package name, then ПОЛ (МЪЖ / ЖЕН
 category cards (Фитнес, Изкуство, Спорт, Култура) at 152.3×212.8. Then "ИЗБЕРИ" and, under
 it, an error line annotated *"this is the error notification bar if the user still hasnt
 selected everything"*.
+
+**Revised later on 2026-09-22**: the "дизайн" label became a two-part row on both frames
+(`525:5701` on BASIC, `525:5730` on SUPPORTER) — the label on the left and a **"drop - OCT"
+badge** on the right, 181×60. This is the dashed drop badge `/join` already renders, computed
+from `nextDeliveryDate()` and sharing `MONTHS_BG` with the announcement strip. Existing code;
+do not build a second one.
 
 The Supporter frame adds a **sticky bottom sheet**, annotated *"this bottom sheet appears
 as a cart and its stuck at the bottom. It shows your selected tees and how much picks
@@ -184,7 +206,11 @@ redirect to account page"*.
    `join-usps.tsx` and `wash-care.tsx` are all in scope.
 9. **The `/` hero is replaced** by step 0. The other home blocks (fabric, usps, reviews,
    faq, cta, social) are not in this design — see question 2.
-10. The header becomes logo + hamburger. No desktop nav appears in any frame.
+10. ~~The header becomes logo + hamburger. No desktop nav appears in any frame.~~
+    **Superseded.** Every frame, mobile and desktop, draws a logo + hamburger header with no
+    nav, but the owner's decision on 2026-09-22 is to **use the global `SiteHeader`
+    unchanged**. Do not build a funnel-specific header, and do not strip the desktop nav to
+    match the drawing.
 
 ### Content
 
@@ -318,24 +344,70 @@ Answers from the owner to the questions this document originally raised.
 13. **Scope of this round is only the frames in the Figma section.** The rest of the site —
     `/about`, the remaining home blocks, `/login`, the six `/account` pages — is stage 2.
 
-### Desktop
+Answers to the questions raised by the second read, later the same day:
 
-There are no desktop frames. The owner's direction: reuse the desktop language of the
-existing auth screens — content flushed left in a two-column structure, illustrations on the
-right, and the same type scale. That is `AuthPage` in
-`src/components/site/auth-page.tsx` (the Figma "Login" frame, 495:3) together with
-`authField` / `authLabel` / `authButton`, which the new mobile fields already match at
-50.5px / `rounded-[6px]` / red on grey.
+14. **The FAQ price and the FAQ courier list are placeholder copy.** Recorded in
+    [pre-launch.md](pre-launch.md); build the screens with the copy as drawn.
+15. **The cart renders `shirtCount` slots, not four.** The container stays full width
+    whatever the package; only the boxes for slots that exist are rendered. A Supporter
+    order shows two, and slots 3 and 4 are absent rather than empty.
+16. **Use the global `SiteHeader`** on the funnel, despite the frames drawing a reduced
+    logo + hamburger header.
+17. **The FAQ is Payload content, editable, with new questions addable.** The existing `faq`
+    block (`src/blocks/index.ts`) already has exactly that shape — a `heading` plus an
+    `items` array of question/answer with `minRows: 1` — so no new field type is needed.
+    What is needed is a way for a *route* to read it: the funnel steps are hard-coded routes,
+    not Payload pages, and the FAQ now appears on the package step and on both order steps,
+    so it is shared chrome rather than per-page content. Planned approach: hang the same
+    `heading` + `items` shape off the `Site` global and have the funnel read it there,
+    leaving the existing block alone for the marketing pages. Flagged because it is a
+    judgement call, not an instruction.
 
-Most screens derive cleanly from that shell: the package selector, both verification states,
-the mail popup, account details and payment are all "a heading, a left column of controls,
-illustrations to the right". Two do not, and the owner has offered to design them:
+### Desktop — section `525:1426`, eight frames at 1440px
 
-- **step 0, the landing hero.** It is a hero, not a form — big Handjet type, a blob, three
-  rotated photo cards. There is no desktop equivalent to borrow.
-- **the bottom-sheet cart.** A sticky sheet pinned to the bottom of the viewport is a phone
-  pattern. On desktop the natural form is a persistent summary column on the right — which
-  is exactly where `AuthPage` puts its illustrations, so the two collide.
+Added by the owner on 2026-09-22, which closes the two questions this section used to raise.
+
+| Node | Name | Height |
+|---|---|---|
+| `525:3048` | step 0 landing page | 876 |
+| `525:3441` | step 1-1 пакет | 3545 |
+| `525:3877` | step 1-2-waiting | 1445 |
+| `525:4180` | step 1-2-success | 1445 |
+| `525:5130` | step 2-1-order-BASIC | 4035 |
+| `525:5775` | step 2-1-order-SUPPORTER | 4561 |
+| `525:6298` | step 2-2-account details | 1987 |
+| `525:6736` | step 3-1-payment info | 2087 |
+
+The shell is identical across all eight and matches the `AuthPage` language as predicted:
+
+- The **announcement strip** (`Rectangle 9`, 1440×42) and the **header** (`Logged OUT State`,
+  x=80, 1280–1289×67) at the top of every frame, and the **full site footer** (`Group 63`,
+  1266×821) at the bottom of every frame. Unlike the mobile frames, which are
+  viewport-height steps with no footer, desktop steps are full scrolling pages inside normal
+  site chrome.
+- A **left content column at x=80**: the heading block is 575–766px wide, the forms and
+  buttons 579px. The **step counter** (`Group 185`) sits under the heading at x=88, y≈413.
+- A **right column at x≈767–769**, 591–602px wide, holding the illustration on the early
+  steps and an order summary (`Frame 125`, 593×125; `Group 135`, ~591×801) on the order,
+  account and payment steps.
+
+Two mobile frames have no desktop counterpart, both explained:
+
+- **`opened bottom sheet`** — on desktop the cart is not a sheet at all. It is an **inline
+  full-width row** (`Group 135` at y=2003 on the SUPPORTER frame, 1280×528): slots side by
+  side, each filled one showing a thumbnail with КАТЕГОРИЯ / ПОЛ / РАЗМЕР and a РЕДАКТИРАЙ
+  link, the active slot red with a neon number and no РЕДАКТИРАЙ, empty slots plain grey.
+  Same rules as mobile, different geometry — and no sticky positioning work on desktop.
+- **`update-mail-popup`** — a centred modal over the waiting screen; no separate desktop
+  treatment needed.
+
+The desktop SUPPORTER frame draws four slots where Supporter is a two-shirt package. Owner
+2026-09-22: the **container is always full width, but only `shirtCount` slots render** — a
+Supporter order shows two boxes and slots 3 and 4 do not exist at all. Treat the four-slot
+artwork as the Family case drawn into the wrong frame.
+
+The desktop header in these frames is logo + hamburger with no nav. Owner 2026-09-22:
+**use the global `SiteHeader`**, not a reduced funnel header. See the drift list.
 
 ## Build plan
 
@@ -373,14 +445,22 @@ Ordered so that nothing is built twice. Each numbered item is a commit-sized uni
 
 - Route scheme for the steps, resumable from a link.
 - The phase counter (1/3, 2/3, 3/3 — phases, not screens).
-- Mobile layout at 402px, plus the desktop shell derived from `AuthPage`.
-- Header: logo left, hamburger right.
+- Mobile layout at 402px; desktop as drawn in `525:1426` — left content column at x=80
+  (579px wide), right column at x≈768 (~595px), inside the global header, announcement
+  strip and site footer.
+- Header: the global `SiteHeader`, unchanged (decision 16).
+- Move the FAQ into Payload so the funnel steps can read it (decision 17), and reuse
+  `JoinUsps` for the USP row rather than rebuilding it.
 
 ### 3. Screens
 
-In flow order: step 0 hero → packages → waiting / mail popup / verified → picker (repeating
-per slot) with the cart sheet collapsed and expanded → account details with the two consent
-checkboxes → payment.
+In flow order: step 0 hero → packages (with the USP row and the FAQ below them) → waiting /
+mail popup / verified → picker (repeating per slot, with the drop badge on the дизайн label)
+with the cart collapsed and expanded → account details with the two consent checkboxes →
+payment.
+
+The cart is a sticky bottom sheet on mobile and an inline full-width row on desktop, and
+renders exactly `shirtCount` slots in both (decision 15).
 
 ### 4. Stripe rework
 
@@ -415,11 +495,10 @@ Everything here is knowingly stubbed. **Nothing in this list may reach productio
 
 ## Still open
 
-1. **Desktop for the hero and the cart** — the two screens that do not derive from
-   `AuthPage`. The owner offered to design them; that is the faster path for the hero. For
-   the cart, a right-hand summary column is the obvious answer but it collides with
-   `AuthPage`'s illustrations, so it needs a decision either way.
-2. **"ти" or "вие"?** The design mixes them: step 0 says "Въведи имейла си", steps 2-1 and
+1. **"ти" or "вие"?** The design mixes them: step 0 says "Въведи имейла си", steps 2-1 and
    2-2 say "Изберете" and "Попълнете". The existing site is "ти" throughout. Needs one
    answer applied across all the new copy.
-3. **Bulgarian names for Basic / Supporter / Family**, short enough for a 115px card.
+2. **Bulgarian names for Basic / Supporter / Family**, short enough for a 115px card.
+
+Resolved 2026-09-22: desktop for the hero and the cart — the owner designed both, see
+"Desktop" above.

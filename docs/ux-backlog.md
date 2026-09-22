@@ -6,6 +6,8 @@ This file is the task list. Beads is not in use — its Dolt server has been unr
 
 Copy items marked **(owner)** change existing Bulgarian text, so they need the owner's OK first (see "Rules for edits" in CLAUDE.md).
 
+Nothing here is a launch blocker. The things that genuinely must be fixed before the site takes real money — stubbed email, placeholder copy, sandbox Stripe keys — are in [pre-launch.md](pre-launch.md).
+
 ## Features to add
 
 - [ ] **Subscriptions for more than one shirt per order.** **Now designed** — see [new-user-flow.md](new-user-flow.md), which supersedes this item's guesswork with the real Figma flow (three packages: 1, 2 and 4 shirts/month, picked one at a time with a bottom-sheet cart). Still needs:
