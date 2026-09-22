@@ -1,6 +1,8 @@
 # UX backlog
 
-Started 2026-09-16 from a browser pass over every public and account page (1440px and 390px, signed out and signed in with a never-subscribed account), plus feature requests added the same day. Nothing here is fixed yet. Tick items off as they land, and move them into beads (`bd create`) once the Dolt server is reachable again.
+Started 2026-09-16 from a browser pass over every public and account page (1440px and 390px, signed out and signed in with a never-subscribed account), plus feature requests added the same day. Nothing here is fixed yet. Tick items off as they land.
+
+This file is the task list. Beads is not in use — its Dolt server has been unreachable since before 2026-09-22 and `dolt` is not installed on this machine, so `bd` fails outright. Do not add work there.
 
 Copy items marked **(owner)** change existing Bulgarian text, so they need the owner's OK first (see "Rules for edits" in CLAUDE.md).
 
@@ -11,7 +13,9 @@ Copy items marked **(owner)** change existing Bulgarian text, so they need the o
   - a size, gender and design pick per shirt (`CategorySelections.ts` is unique per customer and month, so that constraint changes)
   - `/join` and the `/account` picker handling several shirts
   - one row per shirt in the `/admin-tools/deliveries` CSV export
-- [ ] **A clearer delivery address picker.** `/join/delivery` and `/account/address` ask for a carrier from a dropdown, then one free-text field for "address or courier office". Better: choose "to an address" or "to an office" first, then show the matching fields. For offices, a searchable list per carrier (Speedy, Sameday and BoxNow all publish office lists or APIs).
+- [ ] **A clearer delivery address picker.** `/join/delivery` and `/account/address` ask for a carrier (radios since 2026-09-17), then one free-text field for "address or courier office". Better: choose "to an address" or "to an office" first, then show the matching fields. For offices, a searchable list per carrier (Speedy, Sameday and BOX NOW all publish office lists or APIs).
+  **Do this together with the schema half** — see [courier-integration.md](courier-integration.md). No carrier API accepts a free-text office name; they need the office/locker **id**. Shipping the picker on free text now means migrating live customer addresses twice.
+- [ ] **Courier API integration (Speedy / Sameday / BOX NOW).** Research done 2026-09-22 in [courier-integration.md](courier-integration.md): endpoints, auth and onboarding for all three, what changes in `Customers.shipping`, and five open questions for the owner (which contracts exist, dispatch address, label format, returns, BOX NOW widget or our own locker list). Blocked on the owner answering #1 — no client number, no API.
 - [ ] **Order summary before paying.** `/join/delivery` never shows what was chosen. Show gender, size, design (with image), price per month and the first delivery date (`nextDeliveryDate()`), with a link back to `/join` to change them. Consider the same summary on `/payment-confirmation`.
 
 ## Blocks people or loses customers
@@ -35,7 +39,7 @@ Copy items marked **(owner)** change existing Bulgarian text, so they need the o
 
 ## Inconsistencies
 
-- [x] **Three form styles.** Done 2026-09-16: register and reset-password moved onto `AuthPage` + `authField/authLabel/authButton`, and `components/forms/woo.tsx` is deleted — no WooCommerce styling left anywhere. `/join/delivery` keeps its pills by decision (owner: it is the paid funnel and was designed that way), so there are now two intentional styles: auth pages and the funnel. Its placeholder-only fields stay open under "Placeholder-only fields" below.
+- [x] **Three form styles.** Done 2026-09-16: register and reset-password moved onto `AuthPage` + `authField/authLabel/authButton`, and `components/forms/woo.tsx` is deleted — no WooCommerce styling left anywhere. Finished 2026-09-17: `/join/delivery` was redesigned onto labelled fields too, and on 2026-09-22 `/account/address` and `/account/details` moved onto the same shared `src/components/forms/field.tsx`, with `/account/payment` mirroring it through Stripe's `appearance` rules. Two styles remain, both intentional: the auth pages and everything else. That also closes "Placeholder-only fields" below for every form except the footer newsletter input, which has its own design.
 - [x] **Leftover English.** Done 2026-09-16:
   - "My account – …" → "Акаунт – …" (`(account)/account/page.tsx`, `(account)/layout.tsx`) and the link label on `/payment-confirmation`
   - About page title → "За нас – …" (DB + `seed-content.ts`)
