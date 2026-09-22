@@ -515,6 +515,7 @@ export interface CategorySelection {
 export interface SignupDraft {
   id: number;
   email: string;
+  resumeToken?: string | null;
   step?: ('plan' | 'verify' | 'design' | 'account' | 'payment') | null;
   plan?: (number | null) | Plan;
   emailVerified?: boolean | null;
@@ -1002,6 +1003,7 @@ export interface CategorySelectionsSelect<T extends boolean = true> {
  */
 export interface SignupDraftsSelect<T extends boolean = true> {
   email?: T;
+  resumeToken?: T;
   step?: T;
   plan?: T;
   emailVerified?: T;

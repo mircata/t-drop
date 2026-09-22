@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 import { isAdmin } from "../lib/access";
 import { genderOptions, sizeOptions } from "../lib/shirt-options";
+import { FUNNEL_STEPS, FUNNEL_STEP_LABELS } from "../lib/signup-steps";
 
 /**
  * One in-progress trip through the signup funnel (docs/new-user-flow.md).
@@ -40,19 +41,18 @@ export const SignupDrafts: CollectionConfig = {
   },
   fields: [
     { name: "email", type: "email", label: "Имейл", required: true, unique: true, index: true },
+    /* What the browser's `tdrop-signup` cookie holds, and what the verification link
+       carries, so the funnel resumes in whichever browser opens that link. Re-issued on
+       every resume. Never an id: a guessable cookie value would expose other people's
+       email and shipping addresses. See src/lib/signup.ts. */
+    { name: "resumeToken", type: "text", label: "Код за продължаване", index: true, admin: { readOnly: true } },
     {
       name: "step",
       type: "select",
       label: "Докъде е стигнал",
       defaultValue: "plan",
       index: true,
-      options: [
-        { label: "Избор на пакет", value: "plan" },
-        { label: "Потвърждаване на имейл", value: "verify" },
-        { label: "Избор на дизайн", value: "design" },
-        { label: "Данни за профила", value: "account" },
-        { label: "Плащане", value: "payment" },
-      ],
+      options: FUNNEL_STEPS.map((step) => ({ label: FUNNEL_STEP_LABELS[step], value: step })),
     },
     { name: "plan", type: "relationship", relationTo: "plans", label: "Пакет" },
 
