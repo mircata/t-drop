@@ -8,15 +8,16 @@ Copy items marked **(owner)** change existing Bulgarian text, so they need the o
 
 ## Features to add
 
-- [ ] **Subscriptions for more than one shirt per order.** Today there is one plan and one pick per customer per month. Needs:
+- [ ] **Subscriptions for more than one shirt per order.** **Now designed** — see [new-user-flow.md](new-user-flow.md), which supersedes this item's guesswork with the real Figma flow (three packages: 1, 2 and 4 shirts/month, picked one at a time with a bottom-sheet cart). Still needs:
   - plans with a shirt count and price (`Plans.ts`)
   - a size, gender and design pick per shirt (`CategorySelections.ts` is unique per customer and month, so that constraint changes)
-  - `/join` and the `/account` picker handling several shirts
+  - the new funnel and, in stage 2, the `/account` picker handling several shirts
   - one row per shirt in the `/admin-tools/deliveries` CSV export
+- [ ] **The new user flow (full funnel redesign).** [new-user-flow.md](new-user-flow.md): mobile-first, nine screens from the landing hero through package choice, email verification, per-shirt design picking, account creation and embedded Stripe payment. Replaces `/join` and `/join/delivery` and the home hero. Owner decisions and the build order are in that doc; the rest of the site is stage 2.
 - [ ] **A clearer delivery address picker.** `/join/delivery` and `/account/address` ask for a carrier (radios since 2026-09-17), then one free-text field for "address or courier office". Better: choose "to an address" or "to an office" first, then show the matching fields. For offices, a searchable list per carrier (Speedy, Sameday and BOX NOW all publish office lists or APIs).
   **Do this together with the schema half** — see [courier-integration.md](courier-integration.md). No carrier API accepts a free-text office name; they need the office/locker **id**. Shipping the picker on free text now means migrating live customer addresses twice.
 - [ ] **Courier API integration (Speedy / Sameday / BOX NOW).** Research done 2026-09-22 in [courier-integration.md](courier-integration.md): endpoints, auth and onboarding for all three, what changes in `Customers.shipping`, and five open questions for the owner (which contracts exist, dispatch address, label format, returns, BOX NOW widget or our own locker list). Blocked on the owner answering #1 — no client number, no API.
-- [ ] **Order summary before paying.** `/join/delivery` never shows what was chosen. Show gender, size, design (with image), price per month and the first delivery date (`nextDeliveryDate()`), with a link back to `/join` to change them. Consider the same summary on `/payment-confirmation`.
+- [ ] **Order summary before paying.** *Designed in [new-user-flow.md](new-user-flow.md)* — the bottom-sheet cart is the summary, present from the first pick through payment. Original note: `/join/delivery` never shows what was chosen. Show gender, size, design (with image), price per month and the first delivery date (`nextDeliveryDate()`), with a link back to `/join` to change them. Consider the same summary on `/payment-confirmation`.
 
 ## Blocks people or loses customers
 
@@ -25,13 +26,13 @@ Copy items marked **(owner)** change existing Bulgarian text, so they need the o
 - [ ] **The mobile menu sits under the announcement bar.** The Sheet is `z-50` and the header or marquee is `z-[500]`, so the first link is half hidden and the close button is fully covered. Files: `site-header.tsx`, `components/ui/sheet.tsx`.
 - [ ] **Stripe result pages are unfinished.** `/payment-confirmation` (Stripe `success_url`) and `/payment-failed` (`cancel_url`) have English headings, and the failed page has English body text. Neither has a next-step button (to `/account`, or back to `/join/delivery` to retry). `/checkout` is an empty page titled "Checkout"; remove or redirect it.
 - [ ] **Footer legal links are dead.** Правила за ползване, Политика за поверителност and Условия за връщане all point to `#` (Site global, seeded in `scripts/seed-content.ts`). An EU subscription shop needs terms and a returns policy before taking payment.
-- [ ] **No terms checkbox before payment.** `/join/delivery` goes straight to Stripe from "Поръчай" without accepting the terms and privacy policy.
+- [ ] **No terms checkbox before payment.** *Designed in [new-user-flow.md](new-user-flow.md)* — step 2-2 adds "Съгласявам се с Политиката за поверителност" plus a separate marketing opt-in. Still needs the policy page itself (a lawyer is writing it). Original note: `/join/delivery` goes straight to Stripe from "Поръчай" without accepting the terms and privacy policy.
 
 ## Confusing flows
 
 - [ ] **Sign-up doesn't sign you in.** `/your-profile/register` ends with "Готово, профилът е създаден. Влез от тук.", while `/join/delivery` logs the customer in right away. Make them match.
 - [ ] **Nothing links to the sign-up page.** The login page's "Нямаш акаунт? Направи си" goes to `/join` (per the Figma note), so no account can be made without starting a subscription, and `/your-profile/register` is unlinked. Decide whether that's intended.
-- [ ] **Existing customers get no login path on `/join/delivery`.** A signed-out visitor sees email + password + repeat password with no "Вече имаш профил? Влез" link. Entering an existing email probably fails.
+- [ ] **Existing customers get no login path on `/join/delivery`.** A signed-out visitor sees email + password + repeat password with no "Вече имаш профил? Влез" link. Entering an existing email probably fails. Carries over to the new funnel, which also opens on a bare email field with no "вече имам профил" branch — decide what step 0 does when it gets a known address.
 - [x] **The disabled "Избери" button on `/join` gives no reason.** Done 2026-09-16: a hint beside it lists what is left — "Избери пол, размер и дизайн, за да продължиш." — narrowing as each is picked and disappearing when the button enables (`aria-live`, and the button is `aria-describedby` it).
 - [ ] **Unsubscribe always reports success.** `/newsletter/unsubscribe` says "Отписа се" even for an invalid token (`newsletter/unsubscribe/route.ts`).
 - [ ] **Password reset reveals a bad token too late.** `/your-profile/reset-password` shows the form for an invalid token, so the error only appears after typing the new password twice.
