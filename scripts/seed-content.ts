@@ -18,6 +18,17 @@ async function media(p: Payload, rel: string, alt = ""): Promise<number> {
   const filename = path.basename(rel);
   const found = await p.find({ collection: "media", where: { filename: { equals: filename } }, limit: 1 });
   if (found.docs[0]) return found.docs[0].id;
+  /* Payload renames an upload whose name is already taken in storage (`shirt-icon-1.svg`),
+     which is how the Vercel test site's bucket has them. Match those too, so a re-seed
+     reuses the file instead of uploading another copy. */
+  const ext = path.extname(filename);
+  const stem = filename.slice(0, -ext.length);
+  const similar = await p.find({ collection: "media", where: { filename: { like: stem } }, limit: 20 });
+  const renamed = similar.docs.find((d) => new RegExp(`^${stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-\\d+${ext.replace(".", "\\.")}$`).test(d.filename ?? ""));
+  if (renamed) return renamed.id;
+  /* Seeding a remote database without its storage keys would store the file on this
+     machine and point the row at it — a broken image on the site. Refuse instead. */
+  if (process.env.SEED_NO_UPLOAD === "1") throw new Error(`Missing media ${filename} and SEED_NO_UPLOAD=1 — not uploading.`);
   const doc = await p.create({ collection: "media", filePath: wp(rel), data: { alt } });
   p.logger.info(`Uploaded ${filename}`);
   return doc.id;
