@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import type { SignupDraft } from "@/payload-types";
 import { getPayloadClient } from "./payload";
+import { signupAutoVerify } from "./signup-flags";
 import { type FunnelStep, isFunnelStep, redirectFor, stepIndex, stepPath } from "./signup-steps";
 
 /**
@@ -78,11 +79,22 @@ export async function clearDraftCookie() {
  * than colliding — someone who half-signed-up last week and starts again today keeps their
  * package and their picks. Resuming issues a fresh resume token, which is what attaches the
  * draft to whichever browser they are using now.
+ *
+ * An upsert, and it has to be a real one. Looking the address up and then creating it is
+ * two round trips with a gap in the middle, and `signup_drafts.email` carries a unique
+ * index — so anything that lands a second insert for the same address inside that gap
+ * turns the landing page's only button into a 500. A double-submitted form is the obvious
+ * way in, but it is not the only one, so the collision is handled rather than assumed away:
+ * if the insert is rejected for uniqueness, the row it collided with is the row we wanted
+ * in the first place, and we resume it.
  */
 export async function startDraft(email: string): Promise<SignupDraft> {
   const payload = await getPayloadClient();
   const normalised = email.trim().toLowerCase();
   const resumeToken = newToken();
+
+  const resume = async (id: number | string) =>
+    payload.update({ collection: "signup-drafts", id, data: { resumeToken } });
 
   const existing = await payload.find({
     collection: "signup-drafts",
@@ -90,12 +102,65 @@ export async function startDraft(email: string): Promise<SignupDraft> {
     limit: 1,
   });
 
-  const draft = existing.docs[0]
-    ? await payload.update({ collection: "signup-drafts", id: existing.docs[0].id, data: { resumeToken } })
-    : await payload.create({ collection: "signup-drafts", data: { email: normalised, step: "plan", resumeToken } });
+  let draft: SignupDraft;
+  if (existing.docs[0]) {
+    draft = await resume(existing.docs[0].id);
+  } else {
+    try {
+      draft = await payload.create({
+        collection: "signup-drafts",
+        data: { email: normalised, step: "plan", resumeToken },
+      });
+    } catch (err) {
+      if (!isEmailFieldError(err)) throw err;
+      /* Payload reports every field problem the same way, so the error alone does not say
+         whether the address collided with an existing draft or was simply refused. Looking
+         again is what tells them apart: a row that is there now is the one we wanted, and
+         no row means the address itself was rejected. */
+      const raced = await payload.find({
+        collection: "signup-drafts",
+        where: { email: { equals: normalised } },
+        limit: 1,
+      });
+      if (!raced.docs[0]) throw new SignupEmailRejected(normalised, { cause: err });
+      draft = await resume(raced.docs[0].id);
+    }
+  }
 
   await setDraftCookie(resumeToken);
   return draft;
+}
+
+/**
+ * Payload refused the address itself — it is not a duplicate, it is not acceptable.
+ *
+ * Its own email validation is stricter than any check worth writing by hand (it wants an
+ * alphabetic top-level domain of two characters or more, so `you@213.123` and
+ * `you@localhost` are both out), and the two are guaranteed to drift. This turns that
+ * disagreement into something a form can show instead of an unhandled throw, which is what
+ * the landing page did on 2026-09-22 for exactly that address.
+ */
+export class SignupEmailRejected extends Error {
+  constructor(email: string, options?: { cause?: unknown }) {
+    super(`Payload rejected the signup address ${email}`, options);
+    this.name = "SignupEmailRejected";
+  }
+}
+
+/**
+ * Whether a thrown error is Payload complaining about the `email` field of a
+ * `signup-drafts` write, for any reason — duplicate, malformed or missing.
+ *
+ * Matched structurally rather than on the message: Payload reports these as a
+ * `ValidationError` carrying a per-field list, and the messages themselves are user-facing
+ * copy that can be localised or reworded between versions.
+ */
+function isEmailFieldError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const name = (err as { name?: string }).name;
+  if (name !== "ValidationError") return false;
+  const errors = (err as { data?: { errors?: { path?: string }[] } }).data?.errors ?? [];
+  return errors.some((e) => e.path === "email");
 }
 
 /**
@@ -131,6 +196,51 @@ export async function confirmByVerifyToken(verifyToken: string): Promise<SignupD
   });
 
   await setDraftCookie(resumeToken);
+  return updated;
+}
+
+/* How long a verification link stays good. Long enough to survive a night in a spam
+   folder, short enough that a link sitting in an old mailbox is not a way in. */
+const VERIFY_TOKEN_HOURS = 48;
+
+/**
+ * Issue a fresh verification link for a draft, invalidating any previous one, and send it.
+ *
+ * Called from the plan step's "НАПРЕД" (Figma annotation 519:408: *"when the user click it
+ * leads to the next step and send the user a confirmation link"*), from "ИЗПРАТИ ОТНОВО",
+ * and from the update-mail popup. In every case the old token stops working — which is
+ * what stops a superseded address from still being able to finish the signup.
+ *
+ * **Nothing is actually sent yet.** There is no Resend account, so real sending is deferred
+ * along with the rest of the email work (docs/new-user-flow.md). While `SIGNUP_AUTOVERIFY`
+ * is on, the address is marked verified here and the draft stamped `verifiedWithoutEmail`
+ * so these rows are distinguishable from genuinely verified ones later. With the flag off
+ * the token is stored and the link is logged, so the funnel can still be walked by hand.
+ */
+export async function issueVerification(draft: SignupDraft): Promise<SignupDraft> {
+  const payload = await getPayloadClient();
+  const verifyToken = newToken();
+  const autoVerify = signupAutoVerify();
+
+  const updated = await payload.update({
+    collection: "signup-drafts",
+    id: draft.id,
+    data: autoVerify
+      ? { emailVerified: true, verifiedWithoutEmail: true, verifyToken: null, verifyTokenExpiresAt: null }
+      : {
+          verifyToken,
+          verifyTokenExpiresAt: new Date(Date.now() + VERIFY_TOKEN_HOURS * 3600_000).toISOString(),
+          emailVerified: false,
+        },
+  });
+
+  if (!autoVerify) {
+    const base = process.env.NEXT_PUBLIC_SERVER_URL ?? "";
+    /* Stands in for the email until Resend exists. Deliberately a log line and not a
+       thrown error: the funnel stays walkable in development. */
+    console.info(`[signup] verification link for ${draft.email}: ${base}/signup/confirm?token=${verifyToken}`);
+  }
+
   return updated;
 }
 

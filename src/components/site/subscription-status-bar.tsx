@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 
-const bar = "flex h-[74px] flex-1 items-center justify-between rounded-[14px] pl-[32px] pr-[34px] max-md:flex-col max-md:justify-center max-md:gap-1 max-md:px-5 max-md:py-3";
+const bar = "flex h-[74px] flex-1 items-center justify-between rounded-[14px] pl-[32px] pr-[34px] max-md:h-auto max-md:flex-col max-md:justify-center max-md:gap-1 max-md:px-5 max-md:py-3";
 const label = "font-headline text-[14px] uppercase leading-[1.12] tracking-[1.12px] text-white";
 const value = "font-headline text-[21px] uppercase leading-[1.12] tracking-[1.68px] text-white";
 const manageLink = "flex w-[238px] shrink-0 items-center gap-[12px] font-headline text-[12px] uppercase leading-[1.12] tracking-[0.96px] text-black hover:underline max-md:w-auto max-md:justify-center";
@@ -12,13 +12,28 @@ const manageLink = "flex w-[238px] shrink-0 items-center gap-[12px] font-headlin
  * subscription is NOT active — while active, payment method and shipping are
  * managed on our own pages; the Portal is the recovery path once something
  * (payment, cancellation) needs fixing.
+ *
+ * While active, the bar also carries "Смени абонамент" (owner, 2026-09-27), which opens the
+ * package change popup on the Дроп tab from whichever account page it is on. No frame
+ * draws it, so it borrows the header's outlined "Запиши се" pill, in white on the green.
  */
 export function SubscriptionStatusBar({ hasActive, hasStripeCustomer }: { hasActive: boolean; hasStripeCustomer: boolean }) {
   return (
     <div className="flex items-center gap-[30px] max-md:flex-col max-md:items-stretch max-md:gap-4">
       <div className={`${bar} ${hasActive ? "bg-[#1faa3d]" : "bg-[#bf0000]"}`}>
         <span className={label}>Статус на абонамента</span>
-        <span className={value}>{hasActive ? "Активен" : "Неактивен"}</span>
+        <span className="flex items-center gap-[30px] max-md:flex-col max-md:gap-2">
+          {hasActive ? (
+            <Link
+              href="/account?upgrade=1"
+              scroll={false}
+              className="flex h-[33px] items-center justify-center whitespace-nowrap rounded-full border border-white px-[22px] font-headline text-[12px] uppercase leading-none tracking-[0.72px] text-white hover:bg-white hover:text-[#1faa3d]"
+            >
+              Смени абонамент
+            </Link>
+          ) : null}
+          <span className={value}>{hasActive ? "Активен" : "Неактивен"}</span>
+        </span>
       </div>
       {!hasActive && hasStripeCustomer && (
         <Link href="/account/portal" className={manageLink}>

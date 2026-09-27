@@ -12,6 +12,11 @@ import * as migration_20260915_160000_fulfillment_status from './20260915_160000
 import * as migration_20260917_000500_shipping_city from './20260917_000500_shipping_city';
 import * as migration_20260922_120000_new_user_flow from './20260922_120000_new_user_flow';
 import * as migration_20260922_180000_signup_resume_token from './20260922_180000_signup_resume_token';
+import * as migration_20260922_200000_signup_hero_block from './20260922_200000_signup_hero_block';
+import * as migration_20260922_201000_funnel_faq from './20260922_201000_funnel_faq';
+import * as migration_20260922_210000_signup_hero_field_note from './20260922_210000_signup_hero_field_note';
+import * as migration_20260922_230000_plan_image from './20260922_230000_plan_image';
+import * as migration_20260927_120000_subscription_plan_change from './20260927_120000_subscription_plan_change';
 
 export const migrations = [
   {
@@ -83,5 +88,30 @@ export const migrations = [
     up: migration_20260922_180000_signup_resume_token.up,
     down: migration_20260922_180000_signup_resume_token.down,
     name: '20260922_180000_signup_resume_token'
+  },
+  {
+    up: migration_20260922_200000_signup_hero_block.up,
+    down: migration_20260922_200000_signup_hero_block.down,
+    name: '20260922_200000_signup_hero_block'
+  },
+  {
+    up: migration_20260922_201000_funnel_faq.up,
+    down: migration_20260922_201000_funnel_faq.down,
+    name: '20260922_201000_funnel_faq'
+  },
+  {
+    up: migration_20260922_210000_signup_hero_field_note.up,
+    down: migration_20260922_210000_signup_hero_field_note.down,
+    name: '20260922_210000_signup_hero_field_note'
+  },
+  {
+    up: migration_20260922_230000_plan_image.up,
+    down: migration_20260922_230000_plan_image.down,
+    name: '20260922_230000_plan_image'
+  },
+  {
+    up: migration_20260927_120000_subscription_plan_change.up,
+    down: migration_20260927_120000_subscription_plan_change.down,
+    name: '20260927_120000_subscription_plan_change'
   },
 ];

@@ -1,8 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCustomer } from "@/lib/auth";
 import { getPayloadClient } from "@/lib/payload";
+import { shirtCountFor } from "@/lib/account-drop";
 import { dropMonth, isDropLocked } from "@/lib/stripe-sync";
 
 const SIZES = new Set(["s", "m", "l", "xl"]);
@@ -16,11 +18,9 @@ type Gender = "male" | "female";
  * replaces the old one. After the drop date the pick is locked until the
  * owner sets the next date in /admin.
  *
- * Slot 1 only. This form predates multi-shirt packages and still shows a single picker;
- * rewriting /account to edit all of a package's shirts is stage 2 of the redesign
- * (docs/new-user-flow.md). Until then a Supporter or Family customer can only change their
- * first shirt here, so the slot is pinned rather than left to the default — an unscoped
- * query would otherwise update whichever row came back first.
+ * One shirt at a time: the form carries the slot being picked, and it must be one the
+ * customer's package has for that month (`shirtCountFor`, which honours a package change
+ * that only applies from the next drop).
  */
 export async function pickCategory(formData: FormData) {
   const customer = await getCustomer();
@@ -29,27 +29,39 @@ export async function pickCategory(formData: FormData) {
   const categoryId = Number(formData.get("drop") ?? 0);
   const size = String(formData.get("size") ?? "");
   const gender = String(formData.get("gender") ?? "");
-  if (!categoryId || !SIZES.has(size) || !GENDERS.has(gender)) redirect("/account?picked=missing#drop");
+  const slot = Number(formData.get("slot") ?? 1);
+  const back = (q: string) => `/account?choose=${slot}&picked=${q}#drop`;
+  if (!categoryId || !SIZES.has(size) || !GENDERS.has(gender)) redirect(back("missing"));
 
   const payload = await getPayloadClient();
   const [site, category] = await Promise.all([
     payload.findGlobal({ slug: "site", depth: 0 }),
     payload.findByID({ collection: "categories", id: categoryId }).catch(() => null),
   ]);
-  if (!category?.active) redirect("/account?picked=missing#drop");
-  if (isDropLocked(site.deliveryDay)) redirect("/account?picked=locked#drop");
+  if (!category?.active) redirect(back("missing"));
+  if (isDropLocked(site.deliveryDay)) redirect(back("locked"));
 
   const month = dropMonth(site.deliveryDay);
+  const subs = await payload.find({
+    collection: "subscriptions",
+    where: { and: [{ customer: { equals: customer.id } }, { status: { in: ["active", "trialing"] } }] },
+    sort: "-createdAt",
+    depth: 1,
+    limit: 1,
+  });
+  const sub = subs.docs[0];
+  if (!sub || !Number.isInteger(slot) || slot < 1 || slot > shirtCountFor(sub, month)) redirect(back("missing"));
   const existing = await payload.find({
     collection: "category-selections",
-    where: { and: [{ customer: { equals: customer.id } }, { month: { equals: month } }, { slot: { equals: 1 } }] },
+    where: { and: [{ customer: { equals: customer.id } }, { month: { equals: month } }, { slot: { equals: slot } }] },
     limit: 1,
   });
   const sizeGender = { size: size as Size, gender: gender as Gender };
   if (existing.docs[0]) {
     await payload.update({ collection: "category-selections", id: existing.docs[0].id, data: { category: category.id, ...sizeGender } });
   } else {
-    await payload.create({ collection: "category-selections", data: { customer: customer.id, month, slot: 1, category: category.id, ...sizeGender } });
+    await payload.create({ collection: "category-selections", data: { customer: customer.id, month, slot, category: category.id, ...sizeGender } });
   }
-  redirect("/account?picked=ok#drop");
+  revalidatePath("/account");
+  redirect(`/account?slot=${slot}&picked=ok`);
 }

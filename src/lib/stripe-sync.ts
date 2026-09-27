@@ -200,8 +200,11 @@ async function sendWelcomeEmail(payload: Payload, customer: Customer) {
 
 async function planForPrice(payload: Payload, priceId: string | null) {
   if (priceId) {
-    const r = await payload.find({ collection: "plans", where: { stripePriceId: { equals: priceId } }, limit: 1 });
-    if (r.docs[0]) return r.docs[0];
+    /* A retired plan can keep the price id its replacement took over (the old single
+       "Месечен абонамент" and Базов share one), so an active match wins. */
+    const r = await payload.find({ collection: "plans", where: { stripePriceId: { equals: priceId } }, limit: 10 });
+    const match = r.docs.find((p) => p.active) ?? r.docs[0];
+    if (match) return match;
   }
   const any = await payload.find({ collection: "plans", where: { active: { equals: true } }, sort: "sortOrder", limit: 1 });
   if (!any.docs[0]) throw new Error("No plan configured");
@@ -306,8 +309,25 @@ export async function upsertPayment(payload: Payload, invoice: Stripe.Invoice, o
   };
 
   const existing = await payload.find({ collection: "payments", where: { providerPaymentId: { equals: invoice.id } }, limit: 1 });
-  if (existing.docs[0]) return payload.update({ collection: "payments", id: existing.docs[0].id, data });
-  return payload.create({ collection: "payments", data });
+  const row = existing.docs[0]
+    ? await payload.update({ collection: "payments", id: existing.docs[0].id, data })
+    : await payload.create({ collection: "payments", data });
+  if (paid) await releasePaidPicks(payload, customerId);
+  return row;
+}
+
+/**
+ * The signup funnel writes a new customer's picks before they pay, marked "Чака плащане"
+ * (`createSignupAccount`), so the order is visible in /admin and the deliveries export from
+ * the moment it is placed. A paid invoice is what moves them on to "Подготовка". Idempotent,
+ * and only ever touches rows still waiting on payment.
+ */
+export async function releasePaidPicks(payload: Payload, customerId: number) {
+  await payload.update({
+    collection: "category-selections",
+    where: { and: [{ customer: { equals: customerId } }, { fulfillmentStatus: { equals: "pending_payment" } }] },
+    data: { fulfillmentStatus: "preparing" },
+  });
 }
 
 /**

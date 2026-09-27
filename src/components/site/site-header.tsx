@@ -3,7 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { SIGNUP_HREF } from "@/lib/signup-steps";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 export type NavItem = { href: string; label: string };
@@ -13,7 +14,8 @@ type HeaderNavItem = NavItem & { accent?: boolean };
    2-3 links, swapped by whether a customer is signed in — not the full CMS
    nav list anymore (that's still admin-editable, just no longer shown here). */
 const LOGGED_OUT_NAV: HeaderNavItem[] = [
-  { href: "/join", label: "Запиши се", accent: true },
+  /* To the homepage, which focuses its email field — the funnel starts there. */
+  { href: SIGNUP_HREF, label: "Запиши се", accent: true },
   { href: "/about", label: "За нас" },
   { href: "/login", label: "Вход" },
 ];
@@ -36,6 +38,11 @@ export function SiteHeader({ announcement }: { announcement: string }) {
   // visitors) and swaps in a quick client fetch — see /auth-status for why this
   // isn't just read server-side in the (site) layout.
   const [loggedIn, setLoggedIn] = useState(false);
+  /* The mobile menu closes when one of its links is tapped. It would otherwise stay open
+     over a same-page target ("Запиши се" on the homepage), and hand focus back to its own
+     trigger on closing, taking it from the email field that link focuses. */
+  const [menuOpen, setMenuOpen] = useState(false);
+  const leftByLink = useRef(false);
   useEffect(() => {
     let cancelled = false;
     fetch("/auth-status")
@@ -98,20 +105,37 @@ export function SiteHeader({ announcement }: { announcement: string }) {
         </nav>
 
         <div className="ml-10 flex items-center max-lg:ml-0 max-lg:flex-1 max-lg:justify-end">
-          <Sheet>
+          <Sheet
+            open={menuOpen}
+            onOpenChange={(open) => {
+              if (open) leftByLink.current = false;
+              setMenuOpen(open);
+            }}
+          >
             <SheetTrigger
               className="inline-flex size-[62px] items-center justify-center text-t-black md:max-lg:mx-auto lg:hidden"
               aria-label="Меню"
             >
               <MenuIcon />
             </SheetTrigger>
-            <SheetContent side="right" className="bg-t-cream">
+            {/* Above the header, which is z-[500] with its fixed announcement strip — at the
+                sheet's default z-50 the strip covered the menu's first link and close button. */}
+            <SheetContent
+              side="right"
+              className="z-[600] bg-t-cream"
+              overlayClassName="z-[600]"
+              finalFocus={() => !leftByLink.current}
+            >
               <SheetTitle className="sr-only">Меню</SheetTitle>
               <nav className="mt-10 flex flex-col gap-6">
                 {nav.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={() => {
+                      leftByLink.current = true;
+                      setMenuOpen(false);
+                    }}
                     className={`font-headline text-[21px] uppercase tracking-[0.84px] ${item.accent ? "text-t-red" : "text-t-black"}`}
                   >
                     {item.label}

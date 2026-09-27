@@ -1,12 +1,9 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { stripeAppearance, stripeFonts, stripePromise } from "@/components/forms/stripe-elements";
 import { createSetupIntent, setDefaultPaymentMethod } from "@/lib/actions/payment";
-
-const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
 const submitButton = "flex h-[71px] w-full items-center justify-center rounded-[59px] bg-t-red font-headline text-[21px] uppercase tracking-[0.84px] text-t-cream disabled:opacity-50";
 
@@ -84,28 +81,8 @@ export function PaymentMethodForm() {
       options={{
         clientSecret,
         locale: "bg",
-        fonts: [{ cssSrc: "https://fonts.googleapis.com/css2?family=Handjet&display=swap" }],
-        // Mirrors the shared field style (forms/field.tsx): Handjet labels over 6px-rounded
-        // grey inputs with a red border. Stripe renders in its own iframe, so our Tailwind
-        // classes can't reach it — this is the only way to match.
-        appearance: {
-          variables: {
-            colorPrimary: "#cc0e45",
-            colorText: "#212121",
-            colorBackground: "#eaeaea",
-            colorDanger: "#cc0e45",
-            borderRadius: "6px",
-            fontFamily: "Handjet, sans-serif",
-            fontSizeBase: "18px",
-          },
-          rules: {
-            ".Input": { border: "1px solid #cc0e45", boxShadow: "none", padding: "13px 16px" },
-            ".Input:focus": { border: "2px solid #cc0e45", boxShadow: "none" },
-            ".Label": { fontSize: "16px", color: "#212121", marginBottom: "10px" },
-            ".Tab": { border: "1px solid #cc0e45", boxShadow: "none" },
-            ".AccordionItem": { backgroundColor: "transparent", border: "none", boxShadow: "none", paddingLeft: "0", paddingRight: "0" },
-          },
-        },
+        fonts: stripeFonts,
+        appearance: stripeAppearance(16),
       }}
     >
       <SetupForm onSaved={() => setSaved(true)} />

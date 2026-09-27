@@ -4,6 +4,8 @@ import { JoinFaq } from "@/components/site/join-faq";
 import { headline36 } from "@/components/site/shared";
 import { SizeChart } from "@/components/site/size-chart";
 import { WashCare } from "@/components/site/wash-care";
+import { euro } from "@/lib/money";
+import { planPriceCents } from "@/lib/plan-price";
 import { MONTHS_BG, getPayloadClient, getSite, mediaUrl } from "@/lib/payload";
 import { nextDeliveryDate } from "@/lib/stripe-sync";
 
@@ -14,7 +16,6 @@ export const metadata: Metadata = { title: "Месечен абонамент �
    Categories in /admin, the price from the active Plan, same as before. Picking a
    design no longer submits straight to checkout — see join-picker.tsx and
    /join/delivery for the new two-step flow. */
-const euro = (cents: number) => `€${(cents / 100).toFixed(2).replace(".", ",")}`;
 
 export default async function JoinPage() {
   const payload = await getPayloadClient();
@@ -24,7 +25,7 @@ export default async function JoinPage() {
     getSite(),
   ]);
   const plan = plans.docs[0];
-  const price = plan ? euro(plan.priceCents) : "€17,99";
+  const price = plan ? euro(await planPriceCents(plan)) : "€17,99";
   const themes = categories.docs.map((t) => ({ id: t.id, name: t.name, image: mediaUrl(t.image, "") || null }));
   /* The badge annotated on the design as "the month of the current drop of arrival" —
      the same delivery date the announcement strip counts to. */

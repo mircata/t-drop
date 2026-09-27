@@ -25,13 +25,16 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     // /your-profile itself is retired (superseded by /login as the one login page);
-    // its sub-pages (/your-profile/register, /lost-password, /reset-password, /verify)
+    // its sub-pages (/lost-password, /reset-password, /verify)
     // are unaffected — those links were already emailed out. /register was /login's
     // own former slug, renamed 2026-09-16 because it read as sign-up to visitors —
     // kept redirecting in case it's bookmarked anywhere.
     return [
       { source: "/your-profile", destination: "/login", permanent: true },
       { source: "/register", destination: "/login", permanent: true },
+      // Signing up is the funnel's job since 2026-09-27 (owner's call): the standalone
+      // registration page is retired and its URL goes to the landing page's email field.
+      { source: "/your-profile/register", destination: "/#signup", permanent: true },
     ];
   },
 };

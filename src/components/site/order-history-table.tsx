@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ShirtRows, type CartSlot } from "@/components/site/signup-cart";
 
 export type OrderRow = {
   id: number;
   date: string;
   status: string;
-  categoryName: string | null;
-  categoryImage: string | null;
+  /** The order's shirts — one for Базов, up to four for Семеен. */
+  shirts: CartSlot[];
 };
 
 const th = "font-headline text-[18px] uppercase text-black";
@@ -46,39 +47,37 @@ export function OrderHistoryTable({ rows }: { rows: OrderRow[] }) {
         </div>
       </div>
 
+      {/* "ПРЕГЛЕД НА ПОКУПКА" — Figma `554:3352`: 667px, 29px round, inset 45 / 46 / 45 / 36px,
+          over a 54% red wash; the date and status on one line, then one row per shirt. */}
       {open && (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-[rgba(204,14,69,0.54)] p-5" onClick={() => setOpen(null)}>
-          <div className="flex w-full max-w-[611px] flex-col gap-[40px] rounded-[29px] bg-white px-9 py-[45px]" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[600] flex items-start justify-center overflow-y-auto bg-[rgba(204,14,69,0.54)] px-4 py-[80px] max-lg:py-6" onClick={() => setOpen(null)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="order-title"
+            className="flex w-[667px] max-w-full flex-col gap-[40px] rounded-[29px] bg-white py-[45px] pl-[36px] pr-[46px] max-lg:gap-[30px] max-lg:px-[20px] max-lg:py-[30px]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-start justify-between">
-              <div>
-                <p className="font-headline text-[18px] uppercase tracking-[1.44px] text-[#686868]">Преглед на покупка</p>
-                <p className="font-dot text-[16px] text-[#212121]">Номер: {open.id}</p>
+              <div className="flex flex-col gap-[8px]">
+                <p id="order-title" className="font-headline text-[18px] uppercase leading-[1.12] tracking-[1.44px] text-[#686868]">Преглед на покупка</p>
+                <p className="font-dot text-[16px] leading-[normal] text-[#212121]">Номер: {open.id}</p>
               </div>
-              <button type="button" onClick={() => setOpen(null)} aria-label="Затвори" className="text-t-black">
-                <svg viewBox="0 0 18 18" fill="none" className="size-[18px]" aria-hidden="true">
-                  <path d="M1 1L17 17M17 1L1 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+              <button type="button" onClick={() => setOpen(null)} aria-label="Затвори" className="relative block size-[18px] shrink-0">
+                <Image src="/figma/account/close.svg" alt="" width={20} height={20} className="absolute -top-px -left-px size-[20px] max-w-none" />
               </button>
             </div>
-            <div className="flex items-start gap-[47px]">
-              <div className="relative h-[235px] w-[209px] shrink-0 overflow-hidden rounded-[20px] bg-t-grey">
-                {open.categoryImage && <Image src={open.categoryImage} alt={open.categoryName ?? ""} fill sizes="209px" className="object-cover" />}
-              </div>
-              <div className="flex h-[235px] flex-1 flex-col justify-between">
-                <div>
-                  <p className="font-headline text-[18px] uppercase text-black">Категория</p>
-                  <p className="font-dot text-[16px] text-[#212121]">{open.categoryName ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="font-headline text-[18px] uppercase text-black">Дата</p>
-                  <p className="font-dot text-[16px] text-[#212121]">{open.date}</p>
-                </div>
-                <div>
-                  <p className="font-headline text-[18px] uppercase text-black">Статут</p>
-                  <p className="font-dot text-[16px] text-[#212121]">{open.status}</p>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center justify-between gap-x-[40px] gap-y-[10px]">
+              <p className="flex items-baseline gap-[16px] whitespace-nowrap">
+                <span className="font-headline text-[18px] uppercase leading-[1.12] text-black">Дата</span>
+                <span className="font-dot text-[16px] leading-[normal] text-[#212121]">{open.date}</span>
+              </p>
+              <p className="flex items-baseline gap-[16px] whitespace-nowrap">
+                <span className="font-headline text-[18px] uppercase leading-[1.12] text-black">Статут</span>
+                <span className="font-dot text-[16px] leading-[normal] text-[#212121]">{open.status}</span>
+              </p>
             </div>
+            {open.shirts.length ? <ShirtRows slots={open.shirts} /> : <p className="font-dot text-[16px] text-[#212121]">Няма избран дизайн за този месец.</p>}
           </div>
         </div>
       )}
@@ -92,7 +91,7 @@ function Row({ row, onView }: { row: OrderRow; onView: () => void }) {
       <span className={td}>№{row.id}</span>
       <span className={td}>{row.date}</span>
       <span className={td}>{row.status}</span>
-      <span className={td}>{row.categoryName ?? "—"}</span>
+      <span className={td}>{row.shirts.map((s) => s.categoryName).filter(Boolean).join(", ") || "—"}</span>
       <button
         type="button"
         onClick={onView}

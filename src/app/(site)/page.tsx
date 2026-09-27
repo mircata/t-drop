@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { RenderBlocks } from "@/components/blocks/render-blocks";
+import { getCustomer } from "@/lib/auth";
 import { getPage, getSite } from "@/lib/payload";
 
 /*
@@ -15,6 +16,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
+  /* The landing page is the signup funnel's step 0; a signed-in customer has nothing to
+     sign up for, so they go straight to their account (owner, 2026-09-27). */
+  if (await getCustomer()) redirect("/account");
+
   const [page, site] = await Promise.all([getPage("home"), getSite()]);
   if (!page) notFound();
   return <RenderBlocks blocks={page.layout} site={site} />;

@@ -47,13 +47,24 @@ const iconBg = await media(payload, "2025/12/bulgarian-brand-icon.svg");
 await upsertPage(payload, "home", {
   title: "T-Drop Monthly T-Shirts",
   layout: [
+    /* Step 0 of the signup funnel — Figma `519:3` (mobile) and `525:3048` (desktop),
+       annotated *"this is a the new redesigned hero section of the landing page"*. It
+       replaces the old `hero` block, whose "ЗАПИШИ СЕ" merely linked to /join; this one
+       starts the funnel from the email field itself.
+
+       Copy is read off the frames. `headingTop` carries the editor's own line break, which
+       is what splits "Всеки / месец" across the two lines the design tucks together. */
     {
-      blockType: "hero",
-      heading: "Всеки месец различни дизайни",
-      subheading: "Само за 17.99EU на месец",
+      blockType: "signupHero",
+      headingTop: "Всеки\nмесец",
+      headingBottom: "Нови тениски",
+      body: "Абонирай се за месечната си доза свежа тениска.",
+      emailPlaceholder: "Имейл",
       ctaLabel: "ЗАПИШИ СЕ",
-      ctaHref: "/join",
-      shirt,
+      fieldNote: "Въведи имейла си и започни поръчката само в няколко стъпки.",
+      /* Left empty so the block falls back to the frame's own artwork in
+         public/figma/signup/. An editor swaps these in /admin without touching code. */
+      photos: [],
     },
     {
       blockType: "fabric",
@@ -95,7 +106,7 @@ await upsertPage(payload, "home", {
           answer:
             "Регистрацията е проста, ще ни трябва само имена, имейл, и адрес, на които да доставяме всеки месец пратката.",
           ctaLabel: "От тук",
-          ctaHref: "/join",
+          ctaHref: "/#signup",
         },
       ],
     },
@@ -104,7 +115,7 @@ await upsertPage(payload, "home", {
       heading: "Запиши се сега, ако си задаваш следните въпроси:",
       tagline: "искам нещо лежерно за фитнеса",
       buttonLabel: "ЗАпиши се сега",
-      buttonHref: "/join",
+      buttonHref: "/#signup",
       shirt,
     },
     { blockType: "social", text: "Последвай ни за новини и оферти", smallOnPhones: false },
@@ -124,7 +135,7 @@ await upsertPage(payload, "about", {
       step1Text:
         "От страницата за поръчка си избираш темата, размера, цвета и за удобство можеш да отбележиш за кой е...",
       ctaLabel: "ЗАпиши се сега",
-      ctaHref: "/join",
+      ctaHref: "/#signup",
       step2Heading: "След това...",
       step2Sticker: "и ся кво?",
       step2Text:
@@ -169,23 +180,106 @@ await payload.updateGlobal({
     ],
     newsletterLabel: "Бюлетин",
     newsletterPlaceholder: "Имейл",
-    newsletterButton: "Запиши се",
+    newsletterButton: "Абонирай се",
     copyright: "Tdrop © 2026",
     credit: "Designed by Mirko Minkov",
     instagram: "#",
     facebook: "#",
+    /* The funnel's FAQ, read off Figma `525:3824` (mobile) and `525:3658` (desktop) — ten
+       questions in the order the phone frame lists them, transcribed verbatim. Two answers
+       carry the frames' own slips (a missing space in "си -без обвързване", a mixed em
+       dash and hyphen in the България one); they are left as drawn rather than tidied,
+       since copy is the owner's. Two more are on the pre-launch list: the price answer
+       names one price while the selector above it offers three, and the courier answer
+       names three carriers we do not have contracts with yet. */
+    funnelFaqHeading: "Често задавани въпроси",
+    funnelFaq: [
+      {
+        question: "Какво е T-Drop?",
+        answer:
+          "T-Drop е месечен абонамент за дизайнерски тениски в България - всеки месец получаваш нова, оригинална тениска с уникален дизайн, избран от теб, директно на адрес.",
+      },
+      {
+        question: "Как да се запиша за T-Drop?",
+        answer:
+          "Регистрацията отнема по-малко от минута - трябват ни само име, имейл и адрес за доставка. От там избираш дизайн, размер и пол на тениската за първия си дроп.",
+      },
+      {
+        question: "Колко струва абонаментът?",
+        answer:
+          "Само 17.99 € на месец - цената включва тениската, доставката и достъп до нов дизайн всеки месец. Без скрити такси, спираш когато поискаш.",
+      },
+      {
+        question: "Кога ще получа тениската си?",
+        answer:
+          "Обявяваме точната дата за доставка в лентата най-горе на сайта и в социалните мрежи поне седмица предварително. Пратката пристига до 5 работни дни след тази дата, всеки месец.",
+      },
+      {
+        question: "От какъв материал са тениските?",
+        answer:
+          "100% памук с дълготрайна щампа, отпечатана с доказана технология - тениските са изработени да издържат на носене и пране, без щампата да се напуква или бледнее.",
+      },
+      {
+        question: "Мога ли да сменя размера или дизайна на тениската?",
+        answer:
+          "Да - преди всеки нов дроп имаш прозорец, в който да избереш нов дизайн, размер (S, M, L, XL) и пол за месеца. След старта на производството изборът се заключва до следващия цикъл.",
+      },
+      {
+        question: "Кой рисува дизайните — ИИ(AI) ли ги генерира?",
+        answer:
+          "Не. Всеки месец наемаме артисти, които рисуват дизайните на ръка - нито един принт не е генериран с изкуствен интелект.",
+      },
+      {
+        question: "Произвеждат ли се тениските в България?",
+        answer:
+          "Да, цялото производство — от дизайн до печат - е изцяло в България, което ни позволява по-бърза доставка и контрол на качеството.",
+      },
+      {
+        question: "Мога ли да спра абонамента по всяко време?",
+        answer:
+          "Да, спираш с един клик през профила си -без обвързване, такси за отказ или нужда да се обаждаш някъде.",
+      },
+      {
+        question: "С кой куриер доставяте?",
+        answer:
+          "Работим със Speedy, Sameday и BoxNow - избираш предпочитания спедитор и посочваш точен адрес или офис на куриер при регистрация.",
+      },
+    ],
   },
 });
 payload.logger.info("Site global written.");
 
 // Plan and drop themes so /join and /my-account have something to show.
-const plans = await payload.find({ collection: "plans", limit: 1 });
-if (plans.totalDocs === 0) {
+/* The three packages of the new funnel (Figma `519:377`). The selector there is annotated
+   *"this is package selector. Here you will to create 3 types of subscriptions based on
+   this info here. You can translate it to bulgarian"*, so the frames' BASIC / SUPPORTER /
+   FAMILY are names to translate rather than copy to keep; "Фен" carries the Supporter
+   sense — backing the artists — in one short word that fits the card. **The prices are placeholders** (decision 7) and none of these has a
+   Stripe price id yet, so both are on the pre-launch list; nothing may depend on their
+   ratios. Seeded by name so re-running the seed does not duplicate them. */
+const packages: { name: string; shirtCount: number; priceCents: number; badge: "none" | "recommended" }[] = [
+  { name: "Базов", shirtCount: 1, priceCents: 1799, badge: "none" },
+  { name: "Фен", shirtCount: 2, priceCents: 2299, badge: "none" },
+  { name: "Семеен", shirtCount: 4, priceCents: 2499, badge: "recommended" },
+];
+for (const [i, pack] of packages.entries()) {
+  const found = await payload.find({ collection: "plans", where: { name: { equals: pack.name } }, limit: 1 });
+  if (found.totalDocs > 0) continue;
   await payload.create({
     collection: "plans",
-    data: { name: "Месечен абонамент", priceCents: 1799, currency: "eur", shirtCount: 1, active: true, sortOrder: 0 },
+    data: { ...pack, currency: "eur", active: true, sortOrder: i },
   });
-  payload.logger.info("Created plan Месечен абонамент (17.99 EUR).");
+  payload.logger.info(`Created plan ${pack.name} (${(pack.priceCents / 100).toFixed(2)} EUR, ${pack.shirtCount} shirts).`);
+}
+
+/* The single plan this site launched with, superseded by "Базов" (same price, same one
+   shirt). Deactivated rather than deleted: existing subscriptions point at it and payment
+   history is meant to survive, but leaving it active would draw a fourth package card on
+   the funnel's selector. */
+const legacy = await payload.find({ collection: "plans", where: { name: { equals: "Месечен абонамент" } }, limit: 1 });
+if (legacy.docs[0]?.active) {
+  await payload.update({ collection: "plans", id: legacy.docs[0].id, data: { active: false } });
+  payload.logger.info("Deactivated the legacy single plan in favour of Базов.");
 }
 
 // Names as on the /join product page. /my-account showed "Култура/Изкуство" for the same themes; one list now.

@@ -3,8 +3,8 @@
 Read 2026-09-22 from the Figma section `515:2`, ten frames, all **402px wide — mobile**,
 and re-read later the same day after the owner's revisions. A matching desktop section
 `525:1426` ("NEW USER FLOW - DESKTOP", eight frames at 1440px) was added in that round —
-see "Desktop" below. Nothing is built yet beyond the data model. This is what the design
-contains, what it changes, and what has to be answered before it can be built.
+see "Desktop" below. This is what the design contains and what it changes; see
+"Build plan" at the end for what is built so far.
 
 Every frame's node id is given so a future session can go back to the source. Dev Mode
 annotations are quoted verbatim — they carry instructions that appear nowhere else.
@@ -413,6 +413,19 @@ The desktop header in these frames is logo + hamburger with no nav. Owner 2026-0
 
 Ordered so that nothing is built twice. Each numbered item is a commit-sized unit.
 
+**Progress as of 2026-09-22:** items 1 and 2 are done, and item 3 is done except the payment
+screen's card form. Steps 0 through 2-2 are built and walk end to end — the landing hero's
+email field creates a draft, the package step records the plan and issues verification, the
+waiting screen flips to its verified state, the picker repeats per slot with the cart, and
+the account screen creates the customer, writes the picks as `category-selections` rows and
+signs the customer in. Step 3-1 has its "ВАЖНА ИНФОРМАЦИЯ" panel and a stood-in widget box;
+the card form itself is item 4.
+
+**The `/` hero has deliberately not been swapped yet.** `SignupHeroBlock` exists and is
+registered, but the home page still renders the old `hero` block, because a visitor entering
+the funnel today would create a real account and then reach a payment screen that cannot
+take payment. Swap the seed to `signupHero` as part of item 4, once the funnel can finish.
+
 ### 1. Data model and migrations
 
 - `Plans`: add `shirtCount` (1 / 2 / 4) and a `badge` field for the "recommended" ribbon.
@@ -464,6 +477,10 @@ renders exactly `shirtCount` slots in both (decision 15).
 
 ### 4. Stripe rework
 
+**Done 2026-09-27 for the new funnel** — `/signup/payment` takes the first payment with the
+embedded Payment Element and lands on `/account` (see CLAUDE.md, the Stripe paragraph).
+Still hosted Checkout: the old `/join` → `/join/delivery` flow, which goes with item 5.
+
 Move from hosted Checkout to the embedded Payment Element, reusing
 `src/components/forms/payment-method-form.tsx` and its `appearance` rules. `startCheckout`,
 the metadata path through `stripe-sync.ts`, `/payment-confirmation` and `/payment-failed`
@@ -495,10 +512,16 @@ Everything here is knowingly stubbed. **Nothing in this list may reach productio
 
 ## Still open
 
-1. **"ти" or "вие"?** The design mixes them: step 0 says "Въведи имейла си", steps 2-1 and
-   2-2 say "Изберете" and "Попълнете". The existing site is "ти" throughout. Needs one
-   answer applied across all the new copy.
-2. **Bulgarian names for Basic / Supporter / Family**, short enough for a 115px card.
+Nothing from the original list. Both remaining questions were answered on 2026-09-22:
 
-Resolved 2026-09-22: desktop for the hero and the cart — the owner designed both, see
-"Desktop" above.
+- **"ти", everywhere.** The design mixed them — step 0 says "Въведи имейла си" while steps
+  2-1 and 2-2 said "Изберете" and "Попълнете" — and the existing site is "ти" throughout, so
+  the funnel follows it and the "вие" screens were reworded. Any new copy for these screens
+  uses "ти".
+- **Базов / Фен / Семеен** for Basic / Supporter / Family. "Фен" carries the Supporter sense
+  (backing the artists) in one short word that fits the card. Seeded in
+  `scripts/seed-content.ts`; the **prices are still placeholders** and none of the three has
+  a Stripe price id (docs/pre-launch.md).
+
+Resolved earlier the same day: desktop for the hero and the cart — the owner designed both,
+see "Desktop" above.

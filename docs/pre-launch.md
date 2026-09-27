@@ -20,10 +20,15 @@ if an item is still unticked, the site is not ready. Nice-to-haves live in
       [courier-integration.md](courier-integration.md) there is no contract with any of the
       three yet; Speedy and BOX NOW are planned, Sameday is undecided. Owner 2026-09-22:
       placeholder. The final wording must match the contracts that actually exist.
-- [ ] **Package names and prices.** Basic / Supporter / Family are untranslated and the
-      three prices are placeholders (decisions 7 and 11 in
-      [new-user-flow.md](new-user-flow.md)). Three real Stripe prices are needed, and the
-      seed script still seeds a single plan.
+- [ ] **Package prices and their Stripe ids.** The names are settled — Базов / Фен /
+      Семеен, seeded by `scripts/seed-content.ts` — but the three prices (€17,99 / €22,99 /
+      €24,99) are placeholders (decision 7 in [new-user-flow.md](new-user-flow.md)) and none
+      of the three plans has a `stripePriceId` yet. Nothing may depend on their ratios.
+- [ ] **Pictures for the package cards.** The picture is the biggest thing on each card at
+      step 1-1, and both frames (`519:434`, `525:3769` and their siblings) draw it as a
+      plain grey `#f5f5f5` rounded rectangle — a placeholder, not artwork. `Plans.image`
+      exists for it in /admin and a plan with none renders that same grey box, which is what
+      the three seeded packages do today. Nothing has been invented to fill it.
 - [ ] **The privacy policy.** A lawyer is writing it. Until it exists the consent checkbox
       at step 2-2 points at a dead link, which is worse than no checkbox. The footer's other
       legal links are `#` for the same reason.
@@ -33,8 +38,21 @@ if an item is still unticked, the site is not ready. Nice-to-haves live in
 The full list, with the reasoning, is under "Email sending — deferred" in
 [new-user-flow.md](new-user-flow.md). The two that can do real damage if forgotten:
 
-- [ ] **Remove the auto-verify stub** and the flag that switches it. Left in, it lets
-      unverified addresses through silently — the failure mode is invisible.
+- [ ] **Build the verification screens that do not exist yet.** As of 2026-09-22 the funnel's
+      step 1-2 renders only the *verified* state (`519:579` / `525:4180`) and verifies
+      nothing. The waiting state (`519:486`), "ИЗПРАТИ ОТНОВО" and the "Друг мейл?" popup
+      (`525:1340`) are designed but deliberately not built, and their server actions
+      (`resendVerification`, `changeSignupEmail`) were removed with them — an unused Server
+      Action is still a live endpoint. Build the screens and the actions together with real
+      sending, so there is never a half-wired verification flow.
+- [ ] **Remove the auto-verify stub** and the flag that switches it: `SIGNUP_AUTOVERIFY`,
+      read by `signupAutoVerify()` in `src/lib/signup-flags.ts` and used by
+      `issueVerification()` in `src/lib/signup.ts`. Drafts waved through this way are stamped
+      `verifiedWithoutEmail`, so they can be found and dealt with. Setting the flag in a
+      production build already throws at startup rather than passing silently, but the stub
+      and the flag should both go once real sending works. The guard lets Vercel through on purpose
+      (it is the test site, not production — CLAUDE.md "Environments"); the real
+      production host is where it bites.
 - [ ] **Set `RESEND_API_KEY`.** Without it every email in the app prints to the server
       console instead of sending, including password resets and the guest-checkout
       "choose your password" link.

@@ -290,6 +290,23 @@ export interface Page {
             blockType: 'hero';
           }
         | {
+            headingTop: string;
+            headingBottom: string;
+            body: string;
+            emailPlaceholder: string;
+            ctaLabel: string;
+            fieldNote: string;
+            photos?:
+              | {
+                  photo: number | Media;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'signupHero';
+          }
+        | {
             stickerRed: string;
             stickerNeon: string;
             stickerDot: string;
@@ -407,11 +424,15 @@ export interface Plan {
   id: number;
   name: string;
   description?: string | null;
+  image?: (number | null) | Media;
   /**
    * Колко избора прави клиентът за един дроп.
    */
   shirtCount: number;
   badge?: ('none' | 'recommended') | null;
+  /**
+   * Сайтът показва цената от Stripe (по Stripe price ID). Това поле се използва само ако Stripe не е достъпен или няма price ID.
+   */
   priceCents: number;
   currency: string;
   /**
@@ -431,6 +452,12 @@ export interface Subscription {
   id: number;
   customer: number | Customer;
   plan: number | Plan;
+  previousPlan?: (number | null) | Plan;
+  planEffectiveMonth?: string | null;
+  /**
+   * Към по-малък пакет може да се мине месец след това.
+   */
+  lastUpgradeAt?: string | null;
   status: 'active' | 'trialing' | 'past_due' | 'unpaid' | 'incomplete' | 'paused' | 'canceled';
   provider: 'stripe' | 'other';
   providerSubscriptionId: string;
@@ -806,6 +833,24 @@ export interface PagesSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        signupHero?:
+          | T
+          | {
+              headingTop?: T;
+              headingBottom?: T;
+              body?: T;
+              emailPlaceholder?: T;
+              ctaLabel?: T;
+              fieldNote?: T;
+              photos?:
+                | T
+                | {
+                    photo?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
         fabric?:
           | T
           | {
@@ -921,6 +966,7 @@ export interface PagesSelect<T extends boolean = true> {
 export interface PlansSelect<T extends boolean = true> {
   name?: T;
   description?: T;
+  image?: T;
   shirtCount?: T;
   badge?: T;
   priceCents?: T;
@@ -938,6 +984,9 @@ export interface PlansSelect<T extends boolean = true> {
 export interface SubscriptionsSelect<T extends boolean = true> {
   customer?: T;
   plan?: T;
+  previousPlan?: T;
+  planEffectiveMonth?: T;
+  lastUpgradeAt?: T;
   status?: T;
   provider?: T;
   providerSubscriptionId?: T;
@@ -1129,6 +1178,14 @@ export interface Site {
   newsletterButton: string;
   copyright: string;
   credit: string;
+  funnelFaqHeading?: string | null;
+  funnelFaq?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
   instagram?: string | null;
   facebook?: string | null;
   updatedAt?: string | null;
@@ -1167,6 +1224,14 @@ export interface SiteSelect<T extends boolean = true> {
   newsletterButton?: T;
   copyright?: T;
   credit?: T;
+  funnelFaqHeading?: T;
+  funnelFaq?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
   instagram?: T;
   facebook?: T;
   updatedAt?: T;

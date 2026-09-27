@@ -7,6 +7,7 @@ import { FabricBlock } from "./fabric";
 import { FaqBlock } from "./faq";
 import { HeroBlock } from "./hero";
 import { ReviewsBlock } from "./reviews";
+import { SignupHeroBlock } from "./signup-hero";
 import { UspsBlock } from "./usps";
 
 /**
@@ -20,6 +21,8 @@ export function RenderBlocks({ blocks, site, wrapSocial = false }: { blocks: Pag
     switch (block.blockType) {
       case "hero":
         return <HeroBlock key={key} {...block} />;
+      case "signupHero":
+        return <SignupHeroBlock key={key} {...block} />;
       case "fabric":
         return <FabricBlock key={key} {...block} />;
       case "usps":

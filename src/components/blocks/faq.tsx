@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { SIGNUP_HREF } from "@/lib/signup-steps";
 import { buttonWhite, headline36, subheadline } from "@/components/site/shared";
 import type { Page } from "@/payload-types";
 import { Lines } from "./lines";
@@ -18,7 +19,7 @@ export function FaqBlock(b: Props) {
               <h3 className={subheadline}>{f.question}</h3>
               <p className="mt-5"><Lines text={f.answer} /></p>
               {f.ctaLabel && (
-                <Link href={f.ctaHref || "/join"} className={`${buttonWhite} mt-[34px] self-start`}>{f.ctaLabel}</Link>
+                <Link href={f.ctaHref || SIGNUP_HREF} className={`${buttonWhite} mt-[34px] self-start`}>{f.ctaLabel}</Link>
               )}
             </div>
           ))}

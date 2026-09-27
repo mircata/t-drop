@@ -6,7 +6,7 @@ import { SubscriptionStatusBar } from "@/components/site/subscription-status-bar
 import { getCustomer } from "@/lib/auth";
 import { getPayloadClient, mediaUrl } from "@/lib/payload";
 import { stripeEnabled } from "@/lib/stripe";
-import type { CategorySelection } from "@/payload-types";
+import type { CartSlot } from "@/components/site/signup-cart";
 
 export const metadata: Metadata = { title: "История поръчки – T-Drop Monthly T-Shirts" };
 
@@ -37,28 +37,28 @@ export default async function OrdersPage() {
   ]);
   const hasActive = subs.docs.some((s) => !["canceled", "unpaid", "past_due", "incomplete"].includes(s.status));
 
-  /* One category per month for the Категория column. A month can now hold up to four
-     picks, so this keeps the first by slot rather than the last one the map happened to
-     see; showing every shirt of a multi-shirt order is stage 2 of the redesign
-     (docs/new-user-flow.md). The query above sorts by month then slot, so the first entry
-     for a month is slot 1. */
-  type PickedCategory = Exclude<CategorySelection["category"], number>;
-  const pickByMonth = new Map<string, PickedCategory>();
+  /* Every shirt picked for a payment's month — the popup lists them all, and the table's
+     Категория column names them in slot order (the query sorts by month, then slot). */
+  const shirtsByMonth = new Map<string, CartSlot[]>();
   for (const pick of picks.docs) {
-    if (typeof pick.category !== "object" || pickByMonth.has(pick.month)) continue;
-    pickByMonth.set(pick.month, pick.category);
+    const category = typeof pick.category === "object" ? pick.category : null;
+    const list = shirtsByMonth.get(pick.month) ?? [];
+    list.push({
+      slot: pick.slot ?? list.length + 1,
+      categoryName: category?.name ?? null,
+      image: category ? mediaUrl(category.image, "") || null : null,
+      size: pick.size ?? null,
+      gender: pick.gender ?? null,
+    });
+    shirtsByMonth.set(pick.month, list);
   }
 
-  const rows: OrderRow[] = payments.docs.map((p) => {
-    const category = pickByMonth.get(ymOf(p.paidAt ?? p.createdAt));
-    return {
-      id: p.id,
-      date: formatDate(p.paidAt ?? p.createdAt),
-      status: STATUS_LABELS[p.status] ?? p.status,
-      categoryName: category?.name ?? null,
-      categoryImage: category ? mediaUrl(category.image, "") || null : null,
-    };
-  });
+  const rows: OrderRow[] = payments.docs.map((p) => ({
+    id: p.id,
+    date: formatDate(p.paidAt ?? p.createdAt),
+    status: STATUS_LABELS[p.status] ?? p.status,
+    shirts: shirtsByMonth.get(ymOf(p.paidAt ?? p.createdAt)) ?? [],
+  }));
 
   return (
     <section className="site-container pt-[45px] pb-[60px] max-md:px-5">

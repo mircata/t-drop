@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SIGNUP_HREF } from "@/lib/signup-steps";
 import { useActionState } from "react";
 import { login, type FormState } from "@/lib/actions/auth";
 import { authButton, authField, authLabel, authSideLink } from "@/components/site/auth-page";
@@ -38,7 +39,8 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           Вход
         </button>
         <div className="flex w-[262px] flex-col gap-[10px]">
-          <Link href="/join" className={authSideLink}>
+          {/* To the landing page's email field: the signup funnel is how accounts are made. */}
+          <Link href={SIGNUP_HREF} className={authSideLink}>
             Нямаш акаунт? Направи си
           </Link>
           <Link href="/your-profile/lost-password" className="font-dot text-[18px] leading-none text-[#686868] hover:text-t-red">

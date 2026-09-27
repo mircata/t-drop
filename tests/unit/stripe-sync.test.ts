@@ -191,3 +191,53 @@ describe("subscription lifecycle", () => {
     expect(await rows("customers")).toHaveLength(0);
   });
 });
+
+describe("signup funnel payment", () => {
+  /* The funnel writes a new customer's picks before payment, marked "Чака плащане"
+     (createSignupAccount), and creates the subscription itself — no checkout session. */
+  async function signupCustomer() {
+    const customer = await payload.create({
+      collection: "customers",
+      data: { name: "Нов Клиент", email: "signup@example.com", password: "testpass123", stripeCustomerId: "cus_signup" },
+    });
+    for (const slot of [1, 2]) {
+      await payload.create({
+        collection: "category-selections",
+        data: { customer: customer.id, month: "2026-11", slot, category: categoryId, fulfillmentStatus: "pending_payment" },
+      });
+    }
+    return customer;
+  }
+  const statuses = async () => (await rows("category-selections")).map((r) => r.fulfillmentStatus).sort();
+
+  it("a paid first invoice moves the picks waiting on payment to preparing", async () => {
+    const customer = await signupCustomer();
+    await payload.create({ collection: "category-selections", data: { customer: customer.id, month: "2026-10", slot: 1, category: categoryId, fulfillmentStatus: "delivered" } });
+
+    await handleStripeEvent(payload, event("customer.subscription.created", subscription({ id: "sub_signup", customer: "cus_signup", metadata: { payloadCustomerId: String(customer.id), signupDraftId: "1" } })));
+    await handleStripeEvent(payload, event("invoice.paid", invoice({ id: "in_signup", customer: "cus_signup", parent: { type: "subscription_details", subscription_details: { subscription: "sub_signup" } } })));
+
+    expect(await statuses()).toEqual(["delivered", "preparing", "preparing"]);
+    expect((await rows("subscriptions"))[0].customer).toBe(customer.id);
+  });
+
+  it("a failed first invoice leaves them waiting", async () => {
+    await signupCustomer();
+    await handleStripeEvent(payload, event("customer.subscription.created", subscription({ id: "sub_signup", customer: "cus_signup", status: "incomplete" })));
+    await handleStripeEvent(payload, event("invoice.payment_failed", invoice({ id: "in_signup", customer: "cus_signup", status: "open", amount_paid: 0, status_transitions: { paid_at: null }, parent: { type: "subscription_details", subscription_details: { subscription: "sub_signup" } } })));
+
+    expect(await statuses()).toEqual(["pending_payment", "pending_payment"]);
+  });
+
+  it("a price shared with a retired plan resolves to the active one, whichever was created first", async () => {
+    const [active] = (await payload.find({ collection: "plans", limit: 1 })).docs;
+    await payload.create({ collection: "plans", data: { name: "Стар", priceCents: 1799, currency: "eur", shirtCount: 1, stripePriceId: "price_test_001", active: false, sortOrder: 9 } });
+    await handleStripeEvent(payload, event("customer.subscription.created", subscription()));
+    expect((await rows("subscriptions"))[0].plan).toBe(active.id);
+
+    await payload.update({ collection: "plans", id: active.id, data: { active: false } });
+    const replacement = await payload.create({ collection: "plans", data: { name: "Базов", priceCents: 1799, currency: "eur", shirtCount: 1, stripePriceId: "price_test_001", active: true, sortOrder: 1 } });
+    await handleStripeEvent(payload, event("customer.subscription.updated", subscription()));
+    expect((await rows("subscriptions"))[0].plan).toBe(replacement.id);
+  });
+});

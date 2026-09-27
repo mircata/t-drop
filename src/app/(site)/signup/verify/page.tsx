@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
+import { VerifyPanel } from "@/components/forms/verify-panel";
 import { FunnelPage } from "@/components/site/funnel-page";
+import { VerifyArt, VerifyStar } from "@/components/site/verify-art";
 import { requireDraft } from "@/lib/signup";
-import { StepPlaceholder } from "../placeholder";
 
 export const metadata: Metadata = { title: "Потвърди мейл | T-Drop" };
 
 export const dynamic = "force-dynamic";
 
 /**
- * Figma `519:486` (waiting) and `519:579` (verified) are one screen in two states, so they
- * are one route. The dashed panel reads "В ИЗЧАКВАНЕ" until the address is confirmed and
- * "ВЕРИФИЦИРАН" after, and the button changes from "ИЗПРАТИ ОТНОВО" to "НАПРЕД".
+ * Step 1-2 (Figma `519:579` mobile, `525:4180` desktop) — the verified state, which is the
+ * only state this step has for now. Nothing is verified; see `VerifyPanel`.
  *
- * The typo in the Figma subtitle ("изпратехния") is corrected here — the owner approved
- * fixing typos on 2026-09-22.
+ * The frame's copy is "вие" ("Вашият мейл … можете да продължите"). It is reworded to "ти",
+ * the form chosen for the whole funnel on 2026-09-22 and the one the rest of the site uses.
  */
 export default async function VerifyStep() {
   const draft = await requireDraft("verify");
@@ -22,13 +22,15 @@ export default async function VerifyStep() {
     <FunnelPage
       step="verify"
       title="Потвърди мейл"
+      decor={<VerifyStar />}
+      aside={<VerifyArt />}
       subtitle={
         <>
-          Верифицирай мейла си чрез изпратения линк към <strong className="font-bold">{draft.email}</strong>.
+          Мейлът ти <strong className="font-bold">{draft.email}</strong> е верифициран успешно, можеш да продължиш.
         </>
       }
     >
-      <StepPlaceholder>{draft.emailVerified ? "Верифициран" : "В изчакване"}</StepPlaceholder>
+      <VerifyPanel />
     </FunnelPage>
   );
 }

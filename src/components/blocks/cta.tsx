@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { SIGNUP_HREF } from "@/lib/signup-steps";
 import { Shirt, SHIRT, button } from "@/components/site/shared";
 import { mediaUrl } from "@/lib/payload";
 import type { Page } from "@/payload-types";
@@ -22,7 +23,7 @@ export function CtaBlock(b: Props) {
         <div className="mt-5 flex h-[121px] w-[80%] items-center justify-center text-center font-dot text-[21px] uppercase tracking-[0.84px] text-t-black max-md:text-[14px]">
           {b.tagline}
         </div>
-        <Link href={b.buttonHref || "/join"} className={`${button} mt-5`}>{b.buttonLabel}</Link>
+        <Link href={b.buttonHref || SIGNUP_HREF} className={`${button} mt-5`}>{b.buttonLabel}</Link>
       </div>
       <div className="relative w-1/4 rotate-[9deg] max-lg:hidden">
         <Shirt src={shirt} className="relative z-[2] w-full" />

@@ -32,8 +32,8 @@ Nothing here is a launch blocker. The things that genuinely must be fixed before
 
 ## Confusing flows
 
-- [ ] **Sign-up doesn't sign you in.** `/your-profile/register` ends with "Готово, профилът е създаден. Влез от тук.", while `/join/delivery` logs the customer in right away. Make them match.
-- [ ] **Nothing links to the sign-up page.** The login page's "Нямаш акаунт? Направи си" goes to `/join` (per the Figma note), so no account can be made without starting a subscription, and `/your-profile/register` is unlinked. Decide whether that's intended.
+- [x] **Sign-up doesn't sign you in.** Resolved 2026-09-27: `/your-profile/register` is retired and redirects to the funnel (`/#signup`), which signs the customer in. `/your-profile/register` ends with "Готово, профилът е създаден. Влез от тук.", while `/join/delivery` logs the customer in right away. Make them match.
+- [x] **Nothing links to the sign-up page.** Resolved 2026-09-27: "Нямаш акаунт? Направи си" now goes to `/#signup`. The login page's "Нямаш акаунт? Направи си" goes to `/join` (per the Figma note), so no account can be made without starting a subscription, and `/your-profile/register` is unlinked. Decide whether that's intended.
 - [ ] **Existing customers get no login path on `/join/delivery`.** A signed-out visitor sees email + password + repeat password with no "Вече имаш профил? Влез" link. Entering an existing email probably fails. Carries over to the new funnel, which also opens on a bare email field with no "вече имам профил" branch — decide what step 0 does when it gets a known address.
 - [x] **The disabled "Избери" button on `/join` gives no reason.** Done 2026-09-16: a hint beside it lists what is left — "Избери пол, размер и дизайн, за да продължиш." — narrowing as each is picked and disappearing when the button enables (`aria-live`, and the button is `aria-describedby` it).
 - [ ] **Unsubscribe always reports success.** `/newsletter/unsubscribe` says "Отписа се" even for an invalid token (`newsletter/unsubscribe/route.ts`).

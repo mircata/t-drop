@@ -59,6 +59,27 @@ export const Site: GlobalConfig = {
           ],
         },
         {
+          label: "Въпроси (регистрация)",
+          /* The FAQ shown on the signup funnel's steps (Figma `525:3824`), kept here rather
+             than in the `faq` page block because the funnel steps are hard-coded routes,
+             not Payload pages, and the same list appears on more than one of them — it is
+             shared chrome, not per-page content. The `faq` block stays as it is for the
+             marketing pages. Owner decision 17, docs/new-user-flow.md. */
+          fields: [
+            { name: "funnelFaqHeading", type: "text", label: "Заглавие", defaultValue: "Често задавани въпроси" },
+            {
+              name: "funnelFaq",
+              type: "array",
+              label: "Въпроси",
+              labels: { singular: "Въпрос", plural: "Въпроси" },
+              fields: [
+                { name: "question", type: "text", label: "Въпрос", required: true },
+                { name: "answer", type: "textarea", label: "Отговор", required: true },
+              ],
+            },
+          ],
+        },
+        {
           label: "Социални",
           fields: [
             { name: "instagram", type: "text", label: "Instagram адрес" },

@@ -1,8 +1,16 @@
+import { pbkdf2Sync, randomBytes } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { query } from "./db";
 
-/* The customer journey without Stripe: sign up, confirm the email, log in,
-   see the dashboard, pick a drop theme, and the footer newsletter opt-in. */
+/* The customer journey without Stripe: log in, see the dashboard, pick a drop theme, and
+   the footer newsletter opt-in. Accounts are made by the signup funnel, which needs Stripe
+   to finish, so the smoke customer is written straight into the test database. */
+
+/** A password hash Payload's local strategy accepts (its generatePasswordSaltHash). */
+function payloadHash(password: string) {
+  const salt = randomBytes(32).toString("hex");
+  return { salt, hash: pbkdf2Sync(password, salt, 25000, 512, "sha256").toString("hex") };
+}
 
 const stamp = Date.now();
 const email = `smoke-${stamp}@example.com`;
@@ -17,21 +25,18 @@ test("home and about render from Payload", async ({ page }) => {
   await expect(page.locator("h1")).toContainText("Какво е");
 });
 
-test("register, verify by token, log in, see the dashboard", async ({ page }) => {
+test("log in and see the dashboard", async ({ page }) => {
+  /* /your-profile/register is retired (2026-09-27): signing up is the funnel's job. */
   await page.goto("/your-profile/register");
-  await page.getByLabel("Име и фамилия").fill("Smoke Тест");
-  await page.getByLabel("Имейл адрес").fill(email);
-  await page.getByLabel("Парола (поне 8 знака)").fill(password);
-  await page.getByLabel("Повтори паролата").fill(password);
-  await page.getByRole("button", { name: "Регистрация" }).click();
-  await expect(page.getByText("Изпратихме ти имейл")).toBeVisible();
+  await expect(page).toHaveURL(/\/(#signup)?$/);
 
-  const [row] = await query<{ _verificationtoken: string }>("select _verificationtoken from customers where email = $1", [email]);
-  expect(row?._verificationtoken).toBeTruthy();
-  await page.goto(`/your-profile/verify?token=${row._verificationtoken}`);
-  await expect(page).toHaveURL(/verified=1/);
-  await expect(page.getByText("Имейлът е потвърден")).toBeVisible();
+  const { salt, hash } = payloadHash(password);
+  await query(
+    `insert into customers (name, email, salt, hash, _verified, created_at, updated_at) values ('Smoke Тест', $1, $2, $3, true, now(), now())`,
+    [email, salt, hash],
+  );
 
+  await page.goto("/login");
   await page.getByLabel("Имейл", { exact: true }).fill(email);
   await page.getByLabel("Парола", { exact: true }).fill("wrong-password");
   await page.getByRole("button", { name: "Вход" }).click();
@@ -42,6 +47,10 @@ test("register, verify by token, log in, see the dashboard", async ({ page }) =>
   await page.getByRole("button", { name: "Вход" }).click();
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByText("Абонамента ви е неактивен")).toBeVisible();
+
+  /* Signed in, the landing page sends the customer to their account. */
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/account$/);
 });
 
 test("pick a drop theme and change it", async ({ page }) => {
@@ -61,13 +70,15 @@ test("pick a drop theme and change it", async ({ page }) => {
   await page.getByRole("button", { name: "Вход" }).click();
   await expect(page).toHaveURL(/\/account$/);
 
-  const cards = page.locator('input[name="drop"]');
-  await expect(cards.first()).toBeAttached();
-  await cards.nth(1).locator("..").click();
-  await page.getByRole("button", { name: "Избери" }).click();
+  /* No pick yet this month, so the dashboard opens on the design picker. */
+  const form = page.locator("form#drop");
+  await form.locator('input[name="drop"]').nth(1).locator("..").click();
+  await form.locator("fieldset").getByText("Мъж", { exact: true }).click();
+  await form.locator("fieldset").getByText("M", { exact: true }).click();
+  await form.getByRole("button", { name: "Избери" }).click();
   await expect(page).toHaveURL(/picked=ok/);
   await expect(page.getByText("Изборът ти е записан")).toBeVisible();
-  await expect(page.locator('input[name="drop"]').nth(1)).toBeChecked();
+  await expect(page.getByText("Избрана категория")).toBeVisible();
 
   const picks = await query<{ n: string }>("select count(*)::text as n from category_selections cs join customers c on c.id = cs.customer_id where c.email = $1", [email]);
   expect(picks[0].n).toBe("1");
@@ -84,8 +95,8 @@ test("logout protects the dashboard again", async ({ page }) => {
 test("newsletter double opt-in", async ({ page }) => {
   const nl = `nl-${stamp}@example.com`;
   await page.goto("/about");
-  await page.getByPlaceholder("Email").fill(nl);
-  await page.getByRole("button", { name: "Запиши се", exact: true }).click();
+  await page.getByRole("contentinfo").locator("input[type=email]").fill(nl);
+  await page.getByRole("contentinfo").getByRole("button", { name: "Абонирай се", exact: true }).click();
   await expect(page.getByText("Провери имейла си")).toBeVisible();
 
   const [row] = await query<{ token: string; status: string }>("select token, status from subscribers where email = $1", [nl]);

@@ -17,6 +17,12 @@ export const Subscriptions: CollectionConfig = {
   fields: [
     { name: "customer", type: "relationship", relationTo: "customers", label: "Клиент", required: true, index: true },
     { name: "plan", type: "relationship", relationTo: "plans", label: "План", required: true },
+    /* A package change from /account (src/lib/actions/plan-change.ts). The new plan's shirt
+       count applies from `planEffectiveMonth` on; drop months before it keep
+       `previousPlan`'s — see `shirtCountFor` in src/lib/account-drop.ts. */
+    { name: "previousPlan", type: "relationship", relationTo: "plans", label: "Предишен план" },
+    { name: "planEffectiveMonth", type: "text", label: "Новият план важи от дроп (ГГГГ-ММ)" },
+    { name: "lastUpgradeAt", type: "date", label: "Последен ъпгрейд", admin: { description: "Към по-малък пакет може да се мине месец след това." } },
     {
       name: "status",
       type: "select",

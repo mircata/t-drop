@@ -156,4 +156,43 @@ export const AboutWhen: Block = {
   ],
 };
 
-export const pageBlocks: Block[] = [Hero, Fabric, Usps, Reviews, Faq, Cta, Social, AboutStory, AboutWhen];
+/**
+ * Step 0 of the signup funnel, which is a section of the landing page rather than a page of
+ * its own — Figma `519:3`, annotated *"this is a the new redesigned hero section of the
+ * landing page"*. It replaces `Hero` on `/`; both are kept registered so the old one can
+ * still be rendered while the funnel is being finished.
+ *
+ * The email field here is what creates a signup draft, so the block carries the consent
+ * note that has to sit beside it: the owner asked on 2026-09-22 for a line saying plainly
+ * that we will write about the registration and that it is not marketing
+ * (docs/new-user-flow.md, "The GDPR question").
+ */
+export const SignupHero: Block = {
+  slug: "signupHero",
+  labels: { singular: "Hero (регистрация)", plural: "Hero (регистрация)" },
+  fields: [
+    /* Two headings rather than one with a line break: the design sets them in different
+       faces and sizes — Handjet ExtraBold 85.58px over Dela Gothic One 38px — so they
+       cannot be one text node with a `<br>` the way `Lines` handles elsewhere. */
+    { name: "headingTop", type: "text", label: "Голямо заглавие", required: true },
+    { name: "headingBottom", type: "text", label: "Второ заглавие", required: true },
+    { name: "body", type: "textarea", label: "Текст", required: true },
+    { name: "emailPlaceholder", type: "text", label: "Поле за имейл (placeholder)", required: true },
+    { name: "ctaLabel", type: "text", label: "Бутон", required: true },
+    /* The line above the email field (Figma `519:372` / `525:3433`), not below the button —
+       14px at 80% opacity, centred. It is instructional copy, not the consent notice the
+       owner asked for on 2026-09-22; that line still has to find a home (docs/pre-launch.md). */
+    { name: "fieldNote", type: "textarea", label: "Бележка над полето", required: true },
+    {
+      name: "photos",
+      type: "array",
+      label: "Снимки",
+      /* Three, rotated 20.54° / -18.11° / -1.98° in the design. The rotations live in the
+         component; an editor swaps the pictures, not the angles. */
+      maxRows: 3,
+      fields: [image("photo", "Снимка", true)],
+    },
+  ],
+};
+
+export const pageBlocks: Block[] = [Hero, SignupHero, Fabric, Usps, Reviews, Faq, Cta, Social, AboutStory, AboutWhen];

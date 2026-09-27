@@ -12,6 +12,9 @@
  */
 
 /** In flow order. These are also the URL segments under `/signup`. */
+/** Where every "Запиши се" points: the homepage, which focuses its email field on arrival. */
+export const SIGNUP_HREF = "/#signup";
+
 export const FUNNEL_STEPS = ["plan", "verify", "design", "account", "payment"] as const;
 
 export type FunnelStep = (typeof FUNNEL_STEPS)[number];
@@ -92,5 +95,24 @@ export type DraftPosition = {
 export function redirectFor(draft: DraftPosition, target: FunnelStep): string | null {
   if (stepIndex(target) > stepIndex(draft.step)) return stepPath(draft.step);
   if (!draft.emailVerified && stepIndex(target) > stepIndex("verify")) return stepPath("verify");
+  return null;
+}
+
+/** Just enough of one shirt's pick to tell a filled slot from an empty one. */
+export type SlotPick = { slot?: number | null; category?: unknown };
+
+/**
+ * The lowest slot in 1..count with nothing picked for it, or null when the order is full.
+ *
+ * This is what walks a Family order through slots 1..4 without the customer having to find
+ * the next one, and what decides that the design step is finished. It lives here rather
+ * than beside the action that uses it because `"use server"` modules may only export async
+ * functions — and because the interesting cases (a gap left by editing slot 2 of 4, a
+ * package shrunk after picks were made) are worth testing directly.
+ */
+export function nextEmptySlot(picks: SlotPick[], count: number): number | null {
+  for (let slot = 1; slot <= count; slot += 1) {
+    if (!picks.some((p) => p.slot === slot && p.category)) return slot;
+  }
   return null;
 }

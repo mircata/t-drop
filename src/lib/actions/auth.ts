@@ -50,27 +50,6 @@ export async function logout(): Promise<void> {
   redirect("/login");
 }
 
-/** Registration form. Field names: name, email, password, password2. */
-export async function register(_prev: FormState, fd: FormData): Promise<FormState> {
-  const name = str(fd, "name");
-  const email = str(fd, "email").toLowerCase();
-  const password = String(fd.get("password") ?? "");
-  const password2 = String(fd.get("password2") ?? "");
-  if (!name) return { error: "Въведи име." };
-  if (!isEmail(email)) return { error: "Въведи валиден имейл." };
-  if (password.length < 8) return { error: "Паролата трябва да е поне 8 знака." };
-  if (password !== password2) return { error: "Двете пароли не съвпадат." };
-  if (await rateLimited("register", 5, 60 * 60 * 1000)) return { error: "Твърде много регистрации от този адрес. Опитай по-късно." };
-
-  const payload = await getPayloadClient();
-  const existing = await payload.find({ collection: "customers", where: { email: { equals: email } }, limit: 1 });
-  if (existing.totalDocs > 0) return { error: "Вече има профил с този имейл. Влез или поискай нова парола." };
-
-  // Email verification is off for now (Customers.ts auth.verify) — see the TODO there.
-  await payload.create({ collection: "customers", data: { name, email, password } });
-  return { ok: true };
-}
-
 /** Lost password form. Field name: email. Always reports success so emails cannot be enumerated. */
 export async function forgotPassword(_prev: FormState, fd: FormData): Promise<FormState> {
   const email = str(fd, "email").toLowerCase();

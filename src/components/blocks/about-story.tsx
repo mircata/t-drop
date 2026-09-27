@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { SIGNUP_HREF } from "@/lib/signup-steps";
 import { Shirt, SHIRT, badgeNeon, button, headline } from "@/components/site/shared";
 import { mediaUrl } from "@/lib/payload";
 import type { Page } from "@/payload-types";
@@ -25,7 +26,7 @@ export function AboutStoryBlock(b: Props) {
             <p className="mb-[15px] md:max-lg:w-[60%] max-md:w-[80%]">
               <Lines text={b.step1Text} />
             </p>
-            <Link href={b.ctaHref || "/join"} className={`${button} self-start max-lg:self-center`}>{b.ctaLabel}</Link>
+            <Link href={b.ctaHref || SIGNUP_HREF} className={`${button} self-start max-lg:self-center`}>{b.ctaLabel}</Link>
 
             <div className="relative mt-20 flex w-full flex-col justify-end gap-10 pt-10 max-lg:items-center">
               <h2 className={headline}>{b.step2Heading}</h2>

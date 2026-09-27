@@ -3,6 +3,7 @@
 import { getCustomer } from "@/lib/auth";
 import { getPayloadClient } from "@/lib/payload";
 import { getStripe, stripeEnabled } from "@/lib/stripe";
+import { ensureStripeCustomer } from "@/lib/stripe-customer";
 
 /**
  * Creates a SetupIntent for the signed-in customer so Stripe Elements can
@@ -14,17 +15,7 @@ export async function createSetupIntent(): Promise<{ clientSecret: string } | { 
   if (!customer) return { error: "not-signed-in" };
 
   const stripe = getStripe();
-  const payload = await getPayloadClient();
-  let stripeCustomerId = customer.stripeCustomerId ?? undefined;
-  if (!stripeCustomerId) {
-    const created = await stripe.customers.create({
-      email: customer.email,
-      name: customer.name,
-      metadata: { payloadCustomerId: String(customer.id) },
-    });
-    stripeCustomerId = created.id;
-    await payload.update({ collection: "customers", id: customer.id, data: { stripeCustomerId } });
-  }
+  const stripeCustomerId = await ensureStripeCustomer(await getPayloadClient(), customer);
 
   const intent = await stripe.setupIntents.create({ customer: stripeCustomerId, payment_method_types: ["card"] });
   if (!intent.client_secret) return { error: "stripe" };

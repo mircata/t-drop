@@ -3,6 +3,7 @@ import {
   FUNNEL_STEPS,
   type FunnelStep,
   isFunnelStep,
+  nextEmptySlot,
   nextStep,
   phaseLabel,
   phaseOf,
@@ -81,5 +82,39 @@ describe("redirectFor", () => {
         }
       }
     }
+  });
+});
+
+describe("nextEmptySlot", () => {
+  const pick = (slot: number) => ({ slot, category: 1 });
+
+  it("walks a package from the first shirt to the last", () => {
+    expect(nextEmptySlot([], 4)).toBe(1);
+    expect(nextEmptySlot([pick(1)], 4)).toBe(2);
+    expect(nextEmptySlot([pick(1), pick(2), pick(3)], 4)).toBe(4);
+  });
+
+  it("returns null once every slot in the package is picked", () => {
+    expect(nextEmptySlot([pick(1)], 1)).toBeNull();
+    expect(nextEmptySlot([pick(1), pick(2)], 2)).toBeNull();
+  });
+
+  it("finds a gap left in the middle", () => {
+    // Someone edited slot 2 from the cart and abandoned it: the funnel has to come back
+    // to that hole rather than treating the order as complete.
+    expect(nextEmptySlot([pick(1), pick(3), pick(4)], 4)).toBe(2);
+  });
+
+  it("ignores picks beyond the package's shirt count", () => {
+    // A Family order dropped to Базов leaves picks 2-4 behind. They must not make slot 1
+    // look filled, and they must not keep the order open either.
+    expect(nextEmptySlot([pick(2), pick(3)], 1)).toBe(1);
+    expect(nextEmptySlot([pick(1), pick(2), pick(3)], 1)).toBeNull();
+  });
+
+  it("treats a slot with a size but no design as still empty", () => {
+    // The picker writes design, size and gender together, but a half-written row must not
+    // count as a made choice.
+    expect(nextEmptySlot([{ slot: 1, category: null }], 2)).toBe(1);
   });
 });

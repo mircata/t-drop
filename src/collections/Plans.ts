@@ -23,6 +23,10 @@ export const Plans: CollectionConfig = {
   fields: [
     { name: "name", type: "text", label: "Име", required: true },
     { name: "description", type: "textarea", label: "Описание" },
+    /* The picture on the package card in the signup funnel. The Figma frames draw a plain
+       grey rounded rectangle there — a placeholder, not artwork — so there is nothing to
+       ship as a default; a plan with no image renders that same grey box. */
+    { name: "image", type: "upload", relationTo: "media", label: "Картинка на картата" },
     /* How many shirts one subscription delivers each month, i.e. how many picks the
        customer makes per drop. The funnel repeats the design picker this many times and
        writes one `category-selections` row per shirt (slot 1..shirtCount). */
@@ -53,6 +57,12 @@ export const Plans: CollectionConfig = {
       label: "Цена на месец (в евроцентове, 1799 = 17.99 EUR)",
       required: true,
       min: 0,
+      /* The site shows the Stripe price's own amount (src/lib/plan-price.ts); this is only
+         the fallback, so it cannot quietly disagree with what the customer is charged. */
+      admin: {
+        description:
+          "Сайтът показва цената от Stripe (по Stripe price ID). Това поле се използва само ако Stripe не е достъпен или няма price ID.",
+      },
     },
     { name: "currency", type: "text", label: "Валута", defaultValue: "eur", required: true },
     {

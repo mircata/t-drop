@@ -39,6 +39,19 @@ export const SignupDrafts: CollectionConfig = {
     group: "Абонаменти",
     description: "Хора, започнали регистрация, които още нямат профил.",
   },
+  hooks: {
+    /* The unique index on `email` is a plain case-sensitive btree, so without this
+       "Anna@example.com" and "anna@example.com" are two different drafts for one person —
+       and the funnel, which looks addresses up in lower case, would find neither. Normalise
+       on the way in so the index means what it is there to mean. Collection-level rather
+       than in the funnel's own code: /admin writes here too. */
+    beforeValidate: [
+      ({ data }) => {
+        if (data?.email) data.email = data.email.trim().toLowerCase();
+        return data;
+      },
+    ],
+  },
   fields: [
     { name: "email", type: "email", label: "Имейл", required: true, unique: true, index: true },
     /* What the browser's `tdrop-signup` cookie holds, and what the verification link
